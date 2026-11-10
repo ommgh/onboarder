@@ -67,6 +67,7 @@ const FILTERS = [
   { value: "needs-action", label: "Channel issues" },
 ];
 const PAGE = 50;
+const PUBLISH_BATCH = 10;
 
 export function CatalogView({
   connected,
@@ -182,12 +183,13 @@ export function CatalogView({
     try {
       let ok = 0;
       let failed = 0;
-      for (let i = 0; i < ids.length; i += 50) {
+      // Small batches keep each request well inside the 60s function limit.
+      for (let i = 0; i < ids.length; i += PUBLISH_BATCH) {
         const r = await api<{ published: number; failed: number }>(
           `/api/channels/${provider}/publish`,
           {
             method: "POST",
-            json: { productIds: ids.slice(i, i + 50) },
+            json: { productIds: ids.slice(i, i + PUBLISH_BATCH) },
           },
         );
         ok += r.published;

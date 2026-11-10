@@ -3,7 +3,7 @@ import { importShopifyOrders } from "@/lib/channels/shopify";
 import { handler, ok } from "@/lib/server/api";
 import { HttpError, requireUserId } from "@/lib/server/session";
 
-export const maxDuration = 120;
+export const maxDuration = 60; // Vercel Hobby limit
 
 // POST /api/channels/shopify/orders imports recent orders for analytics and fulfilment.
 export const POST = handler(

@@ -16,7 +16,7 @@ import { storeImage } from "@/lib/server/storage";
 import { ensureStore } from "@/lib/server/store";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 60; // Vercel Hobby limit
 
 const input = z.object({
   businessName: z.string().max(80).optional(),

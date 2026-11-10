@@ -7,7 +7,7 @@ import { handler, ok, parseJson } from "@/lib/server/api";
 import { requireUserId } from "@/lib/server/session";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 60; // Vercel Hobby limit
 
 // POST /api/channels/:provider/publish { productIds } -> per-product results
 export const POST = handler(
@@ -16,7 +16,8 @@ export const POST = handler(
     const provider = parseProvider((await ctx.params).provider);
     const { productIds } = await parseJson(
       req,
-      z.object({ productIds: z.array(z.string()).min(1).max(100) }),
+      // Capped so one request finishes within the 60s function limit.
+      z.object({ productIds: z.array(z.string()).min(1).max(25) }),
     );
     let products = await db.product.findMany({
       where: { userId, id: { in: productIds }, status: { not: "ARCHIVED" } },

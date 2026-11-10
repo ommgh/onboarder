@@ -14,7 +14,7 @@ import { HttpError, requireUserId } from "@/lib/server/session";
 import { storeImage } from "@/lib/server/storage";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 60; // Vercel Hobby limit
 
 // Generates a photo for a product that has none (typically loose staples) and applies it
 // to every pack size in the same variant group.

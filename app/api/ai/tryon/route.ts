@@ -12,7 +12,7 @@ import { requireUserId } from "@/lib/server/session";
 import { imagePart, storeImage } from "@/lib/server/storage";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 60; // Vercel Hobby limit
 
 const input = z.discriminatedUnion("action", [
   z.object({ action: z.literal("model"), person: z.string().min(20) }),
