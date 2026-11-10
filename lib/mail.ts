@@ -1,17 +1,23 @@
+import "server-only";
 import { Resend } from "resend";
+import { appUrl } from "@/lib/config";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+// onboarding@resend.dev only delivers to the Resend account owner; set a verified sender.
+const FROM = process.env.RESEND_FROM ?? "Onboarder <onboarding@resend.dev>";
 
 export const sendVerificationEmail = async (email: string, token: string) => {
-  const confirmLink = `http://localhost:3000/auth/new-verification?token=${token}`;
-  await resend.emails.send({
-    from: "onboarding@resend.dev",
+  const link = `${appUrl()}/auth/new-verification?token=${encodeURIComponent(token)}`;
+  const { error } = await resend.emails.send({
+    from: FROM,
     to: email,
-    subject: "Please Verify Your Email",
-    html: `
-      <h1>Verify Your Email</h1>
-      <p>Click the link below to verify your email</p>
-      <a href="${confirmLink}">Verify Email</a>
-    `,
+    subject: "Confirm your email for Onboarder",
+    html: `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:auto;padding:24px;color:#1c1917">
+      <h2 style="margin:0 0 12px">Welcome to Onboarder</h2>
+      <p>Confirm your email to start putting your shop online.</p>
+      <p><a href="${link}" style="display:inline-block;background:#c2410c;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none">Confirm email</a></p>
+      <p style="color:#78716c;font-size:13px">This link expires in one hour. If you didn't sign up, ignore this email.</p>
+    </div>`,
   });
+  if (error) console.error("[mail] verification email failed", error);
 };
