@@ -2,13 +2,21 @@ import "server-only";
 import { Resend } from "resend";
 import { appUrl } from "@/lib/config";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+function client() {
+  if (!resend) resend = new Resend(process.env.RESEND_API_KEY);
+  return resend;
+}
 // onboarding@resend.dev only delivers to the Resend account owner; set a verified sender.
 const FROM = process.env.RESEND_FROM ?? "Onboarder <onboarding@resend.dev>";
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   const link = `${appUrl()}/auth/new-verification?token=${encodeURIComponent(token)}`;
-  const { error } = await resend.emails.send({
+  if (!process.env.RESEND_API_KEY) {
+    console.warn(`[mail] RESEND_API_KEY not set; verification link: ${link}`);
+    return;
+  }
+  const { error } = await client().emails.send({
     from: FROM,
     to: email,
     subject: "Confirm your email for Onboarder",

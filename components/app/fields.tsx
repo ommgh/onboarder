@@ -6,7 +6,11 @@ import { UNITS } from "@/lib/products/units";
 import { cn } from "@/lib/utils";
 
 /** Native select: fast, accessible and right at home on phones. */
-export function NativeSelect({ className, children, ...props }: React.ComponentProps<"select">) {
+export function NativeSelect({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"select">) {
   return (
     <div className={cn("relative", className)}>
       <select
@@ -20,14 +24,25 @@ export function NativeSelect({ className, children, ...props }: React.ComponentP
   );
 }
 
-export function OndcCategorySelect({ value, onChange, className, placeholder = "Choose category…", ...rest }: {
+export function OndcCategorySelect({
+  value,
+  onChange,
+  className,
+  placeholder = "Choose category…",
+  ...rest
+}: {
   value: string | null | undefined;
   onChange: (v: string | null) => void;
   className?: string;
   placeholder?: string;
 } & Omit<React.ComponentProps<"select">, "value" | "onChange">) {
   return (
-    <NativeSelect value={value ?? ""} onChange={(e) => onChange(e.target.value || null)} className={className} {...rest}>
+    <NativeSelect
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value || null)}
+      className={className}
+      {...rest}
+    >
       <option value="">{placeholder}</option>
       {ONDC_DOMAINS.map((d) => (
         <optgroup key={d.code} label={d.label}>
@@ -42,9 +57,22 @@ export function OndcCategorySelect({ value, onChange, className, placeholder = "
   );
 }
 
-export function UnitSelect({ value, onChange, className }: { value: string | null | undefined; onChange: (v: string | null) => void; className?: string }) {
+export function UnitSelect({
+  value,
+  onChange,
+  className,
+}: {
+  value: string | null | undefined;
+  onChange: (v: string | null) => void;
+  className?: string;
+}) {
   return (
-    <NativeSelect value={value ?? ""} onChange={(e) => onChange(e.target.value || null)} className={className} aria-label="Unit">
+    <NativeSelect
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value || null)}
+      className={className}
+      aria-label="Unit"
+    >
       <option value="">unit</option>
       {UNITS.map((u) => (
         <option key={u.value} value={u.value}>
@@ -55,7 +83,14 @@ export function UnitSelect({ value, onChange, className }: { value: string | nul
   );
 }
 
-export function Field({ label, hint, error, children, className, htmlFor }: {
+export function Field({
+  label,
+  hint,
+  error,
+  children,
+  className,
+  htmlFor,
+}: {
   label: React.ReactNode;
   hint?: React.ReactNode;
   error?: string | null;
@@ -69,19 +104,30 @@ export function Field({ label, hint, error, children, className, htmlFor }: {
         {label}
       </label>
       {children}
-      {error ? <p className="text-xs text-destructive">{error}</p> : hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      {error ? (
+        <p className="text-xs text-destructive">{error}</p>
+      ) : hint ? (
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      ) : null}
     </div>
   );
 }
 
 /** Rupee-prefixed numeric input. */
-export function MoneyInput({ value, onChange, className, ...props }: {
+export function MoneyInput({
+  value,
+  onChange,
+  className,
+  ...props
+}: {
   value: number | string | null | undefined;
   onChange: (v: string) => void;
 } & Omit<React.ComponentProps<"input">, "value" | "onChange">) {
   return (
     <div className={cn("relative", className)}>
-      <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
+      <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-sm text-muted-foreground">
+        ₹
+      </span>
       <input
         inputMode="decimal"
         value={value ?? ""}

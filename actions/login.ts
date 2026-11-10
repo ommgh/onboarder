@@ -1,12 +1,12 @@
 "use server";
-import * as z from "zod";
-import { LoginSchema } from "@/schemas";
-import { signIn } from "@/auth";
-import { DEFAULT_AUTH_REDIRECT } from "@/routes";
 import { AuthError } from "next-auth";
+import type * as z from "zod";
+import { signIn } from "@/auth";
 import { getUserByemail } from "@/data/user";
-import { generateVerificationToken } from "@/lib/tokens";
 import { sendVerificationEmail } from "@/lib/mail";
+import { generateVerificationToken } from "@/lib/tokens";
+import { DEFAULT_AUTH_REDIRECT } from "@/routes";
+import { LoginSchema } from "@/schemas";
 
 export const login = async (values: z.infer<typeof LoginSchema>) => {
   const validateFields = LoginSchema.safeParse(values);
@@ -23,11 +23,11 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
 
   if (!existingUser.emailVerified) {
     const verificationToken = await generateVerificationToken(
-      existingUser.email
+      existingUser.email,
     );
     await sendVerificationEmail(
       verificationToken.email,
-      verificationToken.token
+      verificationToken.token,
     );
 
     return { success: "Please Verify Your Email First" };

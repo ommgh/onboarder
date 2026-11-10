@@ -10,7 +10,9 @@ export const DELETE = handler(async (req: Request) => {
   const userId = session?.user?.id;
   if (!userId) throw new HttpError(401, "Please sign in.");
   const { confirm } = await parseJson(req, z.object({ confirm: z.string() }));
-  if (confirm.trim().toLowerCase() !== (session.user.email ?? "").toLowerCase()) {
+  if (
+    confirm.trim().toLowerCase() !== (session.user.email ?? "").toLowerCase()
+  ) {
     throw new HttpError(400, "Type your email address exactly to confirm.");
   }
   await db.user.delete({ where: { id: userId } });

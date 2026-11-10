@@ -1,9 +1,9 @@
-import NextAuth, { type DefaultSession } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { UserRole } from "@prisma/client";
+import NextAuth, { type DefaultSession } from "next-auth";
 import authConfig from "@/auth.config";
-import { db } from "@/lib/db";
-import { UserRole, Plan } from "@prisma/client";
 import { getUserById } from "@/data/user";
+import { db } from "@/lib/db";
 
 declare module "next-auth" {
   interface Session {
@@ -25,10 +25,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         where: { userId: user.id },
       });
 
-      if (!existingSub) {
+      if (!existingSub && user.id) {
         await db.subscription.create({
           data: {
-            userId: user.id!,
+            userId: user.id,
           },
         });
       }
@@ -64,7 +64,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     async jwt({ token }) {
       if (!token.sub) return token;
       const existingUser = await getUserById(token.sub);
-      if (!existingUser) return token;
+      // Account deleted: invalidate the session instead of carrying a dangling id.
+      if (!existingUser) return null;
 
       token.role = existingUser.role;
       return token;

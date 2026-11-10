@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@plugin '@tailwindcss/typography';
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -134,7 +134,9 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
 
-  --font-sans: var(--font-geist), var(--font-devanagari), ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    var(--font-geist), var(--font-devanagari), ui-sans-serif, system-ui,
+    sans-serif;
   --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 
@@ -143,16 +145,31 @@
   --animate-scan: scan 2.2s ease-in-out infinite;
 
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
   }
   @keyframes scan {
-    0%, 100% { transform: translateY(0); opacity: 0.9; }
-    50% { transform: translateY(var(--scan-distance, 160px)); opacity: 1; }
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.9;
+    }
+    50% {
+      transform: translateY(var(--scan-distance, 160px));
+      opacity: 1;
+    }
   }
 }
 
@@ -203,5 +220,16 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }

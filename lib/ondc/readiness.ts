@@ -24,7 +24,13 @@ export function storeChecks(store: OndcStore, sellsFood: boolean): Check[] {
     {
       id: "address",
       label: "Shop address and pincode",
-      ok: Boolean(store.addressLine && store.city && store.state && store.pincode && PINCODE.test(store.pincode)),
+      ok: Boolean(
+        store.addressLine &&
+          store.city &&
+          store.state &&
+          store.pincode &&
+          PINCODE.test(store.pincode),
+      ),
       hint: "Buyers see this and delivery partners use it for pickup.",
       fixHref: settings,
     },
@@ -52,7 +58,10 @@ export function storeChecks(store: OndcStore, sellsFood: boolean): Check[] {
     {
       id: "care",
       label: "Customer care contact",
-      ok: Boolean((store.consumerCarePhone || store.phone) && (store.consumerCareEmail || store.email)),
+      ok: Boolean(
+        (store.consumerCarePhone || store.phone) &&
+          (store.consumerCareEmail || store.email),
+      ),
       hint: "Mandatory for grievance redressal on the network.",
       fixHref: settings,
     },
@@ -66,7 +75,9 @@ export function storeChecks(store: OndcStore, sellsFood: boolean): Check[] {
     {
       id: "fssai",
       label: "FSSAI licence",
-      ok: !sellsFood || Boolean(store.fssaiLicense && FSSAI.test(store.fssaiLicense)),
+      ok:
+        !sellsFood ||
+        Boolean(store.fssaiLicense && FSSAI.test(store.fssaiLicense)),
       hint: "14-digit licence number, mandatory when you sell food or groceries.",
       fixHref: settings,
     },
@@ -86,25 +97,66 @@ export interface ProductIssue {
   blocking: boolean;
 }
 
-export function productIssues(p: OndcProduct, store?: Pick<OndcStore, "fssaiLicense">): ProductIssue[] {
+export function productIssues(
+  p: OndcProduct,
+  store?: Pick<OndcStore, "fssaiLicense">,
+): ProductIssue[] {
   const issues: ProductIssue[] = [];
-  if (!p.price || p.price <= 0) issues.push({ field: "price", message: "Add a selling price", blocking: true });
-  if (!p.ondcCategory) issues.push({ field: "ondcCategory", message: "Pick an ONDC category", blocking: true });
-  if (p.stock !== null && p.stock <= 0) issues.push({ field: "stock", message: "Out of stock", blocking: true });
+  if (!p.price || p.price <= 0)
+    issues.push({
+      field: "price",
+      message: "Add a selling price",
+      blocking: true,
+    });
+  if (!p.ondcCategory)
+    issues.push({
+      field: "ondcCategory",
+      message: "Pick an ONDC category",
+      blocking: true,
+    });
+  if (p.stock !== null && p.stock <= 0)
+    issues.push({ field: "stock", message: "Out of stock", blocking: true });
   if (!p.imageUrl && p.images.length === 0)
-    issues.push({ field: "imageUrl", message: "Add a photo (a placeholder is used meanwhile)", blocking: false });
+    issues.push({
+      field: "imageUrl",
+      message: "Add a photo (a placeholder is used meanwhile)",
+      blocking: false,
+    });
   if (p.ondcCategory && FOOD_CATEGORIES.has(p.ondcCategory)) {
-    if (!p.vegType) issues.push({ field: "vegType", message: "Mark veg / non-veg", blocking: false });
+    if (!p.vegType)
+      issues.push({
+        field: "vegType",
+        message: "Mark veg / non-veg",
+        blocking: false,
+      });
     if (store && !store.fssaiLicense)
-      issues.push({ field: "fssai", message: "Store FSSAI licence missing", blocking: true });
+      issues.push({
+        field: "fssai",
+        message: "Store FSSAI licence missing",
+        blocking: true,
+      });
   }
   if (p.type === "PACKAGED" && !p.manufacturer && !p.brand)
-    issues.push({ field: "manufacturer", message: "Add manufacturer or brand", blocking: false });
+    issues.push({
+      field: "manufacturer",
+      message: "Add manufacturer or brand",
+      blocking: false,
+    });
   if (p.mrp && p.price && p.price > p.mrp)
-    issues.push({ field: "price", message: "Price is above MRP, which is not allowed", blocking: true });
+    issues.push({
+      field: "price",
+      message: "Price is above MRP, which is not allowed",
+      blocking: true,
+    });
   return issues;
 }
 
-export function isOndcReady(p: OndcProduct, store?: Pick<OndcStore, "fssaiLicense">) {
-  return !productIssues(p, store).some((i) => i.blocking) && productDomain(p) !== null;
+export function isOndcReady(
+  p: OndcProduct,
+  store?: Pick<OndcStore, "fssaiLicense">,
+) {
+  return (
+    !productIssues(p, store).some((i) => i.blocking) &&
+    productDomain(p) !== null
+  );
 }

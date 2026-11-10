@@ -10,7 +10,10 @@ import { randomUUID } from "node:crypto";
 import { createAuthorizationHeader } from "../lib/ondc/crypto.ts";
 
 const env = process.env.ONDC_ENV === "prod" ? "prod" : "preprod";
-const url = env === "prod" ? "https://prod.registry.ondc.org/subscribe" : "https://preprod.registry.ondc.org/ondc/subscribe";
+const url =
+  env === "prod"
+    ? "https://prod.registry.ondc.org/subscribe"
+    : "https://preprod.registry.ondc.org/ondc/subscribe";
 const need = (k: string) => {
   const v = process.env[k];
   if (!v) throw new Error(`Missing ${k}`);

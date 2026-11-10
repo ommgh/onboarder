@@ -35,8 +35,13 @@ export function priceCart(
 
   for (const line of cart) {
     const product = products.get(line.id);
-    const available = product ? (product.stock === null ? 99 : Math.max(0, product.stock)) : 0;
-    if (!product || !product.price || available < line.count) outOfStock.push(line.id);
+    const available = product
+      ? product.stock === null
+        ? 99
+        : Math.max(0, product.stock)
+      : 0;
+    if (!product || !product.price || available < line.count)
+      outOfStock.push(line.id);
     const unitPrice = product?.price ?? 0;
     const count = product ? Math.min(line.count, available) : 0;
     const lineTotal = unitPrice * count;
@@ -60,10 +65,15 @@ export function priceCart(
 
   const isDelivery = fulfillmentId === DELIVERY_FULFILLMENT_ID;
   const storeGps =
-    store.latitude != null && store.longitude != null ? ([store.latitude, store.longitude] as [number, number]) : null;
+    store.latitude != null && store.longitude != null
+      ? ([store.latitude, store.longitude] as [number, number])
+      : null;
   const buyer = parseGps(buyerGps);
   const serviceable =
-    !isDelivery || !storeGps || !buyer || distanceKm(storeGps, buyer) <= store.serviceRadiusKm;
+    !isDelivery ||
+    !storeGps ||
+    !buyer ||
+    distanceKm(storeGps, buyer) <= store.serviceRadiusKm;
 
   const deliveryFee = isDelivery && serviceable ? store.deliveryFee : 0;
   breakup.push({
@@ -79,10 +89,16 @@ export function priceCart(
     error = {
       type: "DOMAIN-ERROR",
       code: "40002",
-      message: JSON.stringify(outOfStock.map((item_id) => ({ item_id, error: "40002" }))),
+      message: JSON.stringify(
+        outOfStock.map((item_id) => ({ item_id, error: "40002" })),
+      ),
     };
   } else if (!serviceable) {
-    error = { type: "DOMAIN-ERROR", code: "30009", message: "Location not serviceable by seller" };
+    error = {
+      type: "DOMAIN-ERROR",
+      code: "30009",
+      message: "Location not serviceable by seller",
+    };
   } else if (store.minOrderValue > 0 && subtotal < store.minOrderValue) {
     error = {
       type: "DOMAIN-ERROR",
@@ -92,7 +108,11 @@ export function priceCart(
   }
 
   return {
-    quote: { price: { currency: "INR", value: money(total) }, breakup, ttl: "P1D" },
+    quote: {
+      price: { currency: "INR", value: money(total) },
+      breakup,
+      ttl: "P1D",
+    },
     total,
     subtotal,
     deliveryFee,

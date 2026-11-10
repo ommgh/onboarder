@@ -1,17 +1,15 @@
-import { Footer } from "@/components/blocks/footer";
-import { Navbar } from "@/components/blocks/navbar";
+import { Footer } from "@/components/marketing/footer";
+import { Navbar } from "@/components/marketing/navbar";
 
-import "@/styles/globals.css";
-export default function LandingLayout({
+export default function MarketingLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <>
-      
       <Navbar />
-      <main className="">{children}</main>
+      <main>{children}</main>
       <Footer />
     </>
   );

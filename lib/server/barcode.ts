@@ -23,16 +23,28 @@ export function normaliseBarcode(raw: string): string | null {
 async function fromGoUpc(code: string): Promise<BarcodeProduct | null> {
   const key = process.env.UPC_API_KEY;
   if (!key) return null;
-  const res = await fetch(`https://go-upc.com/api/v1/code/${code}?key=${encodeURIComponent(key)}`, {
-    signal: AbortSignal.timeout(6000),
-  }).catch(() => null);
+  const res = await fetch(
+    `https://go-upc.com/api/v1/code/${code}?key=${encodeURIComponent(key)}`,
+    {
+      signal: AbortSignal.timeout(6000),
+    },
+  ).catch(() => null);
   if (!res?.ok) return null;
   const data = (await res.json()) as {
-    product?: { name?: string; brand?: string; description?: string; category?: string; imageUrl?: string; specs?: [string, string][] };
+    product?: {
+      name?: string;
+      brand?: string;
+      description?: string;
+      category?: string;
+      imageUrl?: string;
+      specs?: [string, string][];
+    };
   };
   const p = data.product;
   if (!p?.name) return null;
-  const qty = parseQuantity(p.name) ?? parseQuantity(p.specs?.find(([k]) => /size|weight|volume/i.test(k))?.[1]);
+  const qty =
+    parseQuantity(p.name) ??
+    parseQuantity(p.specs?.find(([k]) => /size|weight|volume/i.test(k))?.[1]);
   return {
     barcode: code,
     name: p.name,
@@ -49,13 +61,20 @@ async function fromGoUpc(code: string): Promise<BarcodeProduct | null> {
 }
 
 async function fromOpenFoodFacts(code: string): Promise<BarcodeProduct | null> {
-  const fields = "product_name,product_name_en,generic_name,brands,quantity,image_front_url,image_url,categories,manufacturing_places,labels_tags,ingredients_analysis_tags";
-  const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=${fields}`, {
-    headers: { "User-Agent": "Onboarder/2.0 (+https://onboarder.store)" },
-    signal: AbortSignal.timeout(6000),
-  }).catch(() => null);
+  const fields =
+    "product_name,product_name_en,generic_name,brands,quantity,image_front_url,image_url,categories,manufacturing_places,labels_tags,ingredients_analysis_tags";
+  const res = await fetch(
+    `https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=${fields}`,
+    {
+      headers: { "User-Agent": "Onboarder/2.0 (+https://onboarder.store)" },
+      signal: AbortSignal.timeout(6000),
+    },
+  ).catch(() => null);
   if (!res?.ok) return null;
-  const data = (await res.json()) as { status?: number; product?: Record<string, unknown> };
+  const data = (await res.json()) as {
+    status?: number;
+    product?: Record<string, unknown>;
+  };
   const p = data.product;
   const name = (p?.product_name as string) || (p?.product_name_en as string);
   if (data.status !== 1 || !p || !name) return null;
@@ -70,7 +89,10 @@ async function fromOpenFoodFacts(code: string): Promise<BarcodeProduct | null> {
       : null;
   return {
     barcode: code,
-    name: brand && !name.toLowerCase().includes(brand.toLowerCase()) ? `${brand} ${name}` : name,
+    name:
+      brand && !name.toLowerCase().includes(brand.toLowerCase())
+        ? `${brand} ${name}`
+        : name,
     brand,
     description: (p.generic_name as string) ?? "",
     category: ((p.categories as string) ?? "").split(",").pop()?.trim() || null,
@@ -84,7 +106,9 @@ async function fromOpenFoodFacts(code: string): Promise<BarcodeProduct | null> {
 }
 
 /** Looks a barcode up across providers, best source first. */
-export async function lookupBarcode(raw: string): Promise<BarcodeProduct | null> {
+export async function lookupBarcode(
+  raw: string,
+): Promise<BarcodeProduct | null> {
   const code = normaliseBarcode(raw);
   if (!code) return null;
   return (await fromGoUpc(code)) ?? (await fromOpenFoodFacts(code));

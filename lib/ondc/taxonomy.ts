@@ -100,18 +100,33 @@ export const ONDC_DOMAINS: OndcDomain[] = [
   {
     code: "ONDC:RET18",
     label: "Health & Wellness",
-    categories: ["Ayurveda", "Nutrition and Supplements", "Health Devices", "Personal Protective Equipment"],
+    categories: [
+      "Ayurveda",
+      "Nutrition and Supplements",
+      "Health Devices",
+      "Personal Protective Equipment",
+    ],
   },
   {
     code: "ONDC:RET14",
     label: "Electronics",
-    categories: ["Mobile Phone", "Mobile Accessories", "Headphones", "Chargers", "Computer Accessories"],
+    categories: [
+      "Mobile Phone",
+      "Mobile Accessories",
+      "Headphones",
+      "Chargers",
+      "Computer Accessories",
+    ],
   },
 ];
 
-export function domainForCategory(category: string | null | undefined): string | null {
+export function domainForCategory(
+  category: string | null | undefined,
+): string | null {
   if (!category) return null;
-  return ONDC_DOMAINS.find((d) => d.categories.includes(category))?.code ?? null;
+  return (
+    ONDC_DOMAINS.find((d) => d.categories.includes(category))?.code ?? null
+  );
 }
 
 export const FOOD_CATEGORIES = new Set(
@@ -144,12 +159,21 @@ const HINTS: [RegExp, string][] = [
   [/noodle|pasta|soup|maggi|yippee/i, "Pasta, Soup and Noodles"],
   [/biscuit|cookie|chocolate|cadbury|wafer/i, "Chocolates and Biscuits"],
   [/namkeen|bhujia|chips|crisps|snack|kurkure/i, "Snacks and Namkeen"],
-  [/almond|cashew|raisin|walnut|pista|dry ?fruit|nuts?\b|makhana|dates/i, "Snacks, Dry Fruits, Nuts"],
+  [
+    /almond|cashew|raisin|walnut|pista|dry ?fruit|nuts?\b|makhana|dates/i,
+    "Snacks, Dry Fruits, Nuts",
+  ],
   [/\batta\b|flour|maida|besan|sooji|rava|suji/i, "Atta, Flours and Sooji"],
   [/\brice\b|basmati|poha/i, "Rice and Rice Products"],
-  [/\bdal\b|pulse|lentil|rajma|chana|moong|toor|urad|masoor/i, "Dals and Pulses"],
+  [
+    /\bdal\b|pulse|lentil|rajma|chana|moong|toor|urad|masoor/i,
+    "Dals and Pulses",
+  ],
   [/sugar|salt|jaggery|gud\b/i, "Salt, Sugar and Jaggery"],
-  [/masala|spice|turmeric|haldi|chilli|jeera|cumin|coriander|pepper|seasoning/i, "Masala & Seasoning"],
+  [
+    /masala|spice|turmeric|haldi|chilli|jeera|cumin|coriander|pepper|seasoning/i,
+    "Masala & Seasoning",
+  ],
   [/\boil\b|ghee|vanaspati/i, "Oil & Ghee"],
   [/\btea\b|coffee|chai/i, "Tea and Coffee"],
   [/juice|fruity|frooti|maaza/i, "Fruit Juices and Fruity Drinks"],
@@ -163,7 +187,10 @@ const HINTS: [RegExp, string][] = [
   [/cereal|oats|muesli|cornflakes|breakfast/i, "Cereals and Breakfast"],
   [/ready to (eat|cook)|instant/i, "Ready to Cook and Eat"],
   [/sweet|mithai|laddoo|halwa/i, "Indian Sweets"],
-  [/detergent|soap|cleaner|dishwash|floor|toilet|phenyl|household/i, "Cleaning & Household"],
+  [
+    /detergent|soap|cleaner|dishwash|floor|toilet|phenyl|household/i,
+    "Cleaning & Household",
+  ],
   [/shampoo|hair/i, "Hair Care"],
   [/toothpaste|toothbrush|oral/i, "Oral Care"],
   [/cream|lotion|face ?wash|skin/i, "Skin Care"],
@@ -172,10 +199,14 @@ const HINTS: [RegExp, string][] = [
   [/vegetable|fruit|onion|potato|tomato/i, "Fruits and Vegetables"],
 ];
 
-export function guessOndcCategory(...texts: (string | null | undefined)[]): string | null {
+export function guessOndcCategory(
+  ...texts: (string | null | undefined)[]
+): string | null {
   const text = texts.filter(Boolean).join(" ");
   if (!text) return null;
   return HINTS.find(([re]) => re.test(text))?.[1] ?? null;
 }
 
-export const ALL_ONDC_CATEGORIES = ONDC_DOMAINS.flatMap((d) => d.categories.map((c) => ({ domain: d.label, category: c })));
+export const ALL_ONDC_CATEGORIES = ONDC_DOMAINS.flatMap((d) =>
+  d.categories.map((c) => ({ domain: d.label, category: c })),
+);

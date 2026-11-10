@@ -31,7 +31,8 @@ export const CHANNELS: ChannelInfo[] = [
     tagline: "Your own branded online store",
     mode: "push",
     modeLabel: "Two-way sync",
-    detail: "Products, prices, pack sizes and photos are created in your Shopify store with one click, and re-sync when you edit them here.",
+    detail:
+      "Products, prices, pack sizes and photos are created in your Shopify store with one click, and re-sync when you edit them here.",
   },
   {
     id: "AMAZON",

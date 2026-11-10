@@ -7,11 +7,18 @@ export function ok<T>(data: T, init?: ResponseInit) {
   return NextResponse.json(data, init);
 }
 
-export function fail(status: number, error: string, extra?: Record<string, unknown>) {
+export function fail(
+  status: number,
+  error: string,
+  extra?: Record<string, unknown>,
+) {
   return NextResponse.json({ error, ...extra }, { status });
 }
 
-export async function parseJson<S extends ZodTypeAny>(req: Request, schema: S): Promise<z.output<S>> {
+export async function parseJson<S extends ZodTypeAny>(
+  req: Request,
+  schema: S,
+): Promise<z.output<S>> {
   let body: unknown;
   try {
     body = await req.json();
@@ -22,7 +29,9 @@ export async function parseJson<S extends ZodTypeAny>(req: Request, schema: S): 
 }
 
 /** Wraps a route handler so thrown HttpErrors / ZodErrors become clean JSON responses. */
-export function handler<A extends unknown[]>(fn: (...args: A) => Promise<Response>) {
+export function handler<A extends unknown[]>(
+  fn: (...args: A) => Promise<Response>,
+) {
   return async (...args: A): Promise<Response> => {
     try {
       return await fn(...args);
@@ -34,7 +43,11 @@ export function handler<A extends unknown[]>(fn: (...args: A) => Promise<Respons
 
 export function toErrorResponse(error: unknown) {
   if (error instanceof HttpError) {
-    return fail(error.status, error.message, error.code ? { code: error.code } : undefined);
+    return fail(
+      error.status,
+      error.message,
+      error.code ? { code: error.code } : undefined,
+    );
   }
   if (error instanceof ZodError) {
     const first = error.issues[0];

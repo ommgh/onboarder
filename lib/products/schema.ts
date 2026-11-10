@@ -1,9 +1,21 @@
 import { z } from "zod";
 
+/** Only https image URLs: these flow to ONDC buyer apps, marketplaces and storefronts. */
+const httpsUrl = z
+  .string()
+  .url()
+  .refine(
+    (v) => v.startsWith("https://"),
+    "Image links must start with https://",
+  );
+
 const money = z
   .union([z.number(), z.string()])
   .transform((v) => (v === "" ? null : Number(v)))
-  .refine((v) => v === null || (Number.isFinite(v) && v >= 0 && v < 10_000_000), "Enter a valid amount")
+  .refine(
+    (v) => v === null || (Number.isFinite(v) && v >= 0 && v < 10_000_000),
+    "Enter a valid amount",
+  )
   .nullable();
 
 const optionalText = (max: number) =>
@@ -19,7 +31,9 @@ export const productInput = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
   description: z.string().trim().max(5000).default(""),
   category: z.string().trim().max(100).default("General"),
-  type: z.enum(["PACKAGED", "LOOSE", "HANDMADE", "APPAREL"]).default("PACKAGED"),
+  type: z
+    .enum(["PACKAGED", "LOOSE", "HANDMADE", "APPAREL"])
+    .default("PACKAGED"),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("ACTIVE"),
   brand: optionalText(120),
   sku: optionalText(64),
@@ -29,13 +43,19 @@ export const productInput = z.object({
   stock: z
     .union([z.number().int(), z.string()])
     .transform((v) => (v === "" ? null : Math.trunc(Number(v))))
-    .refine((v) => v === null || (Number.isFinite(v) && v >= 0), "Stock can't be negative")
+    .refine(
+      (v) => v === null || (Number.isFinite(v) && v >= 0),
+      "Stock can't be negative",
+    )
     .nullable()
     .optional(),
-  unit: z.enum(["kg", "g", "l", "ml", "piece", "pack", "dozen"]).nullable().optional(),
+  unit: z
+    .enum(["kg", "g", "l", "ml", "piece", "pack", "dozen"])
+    .nullable()
+    .optional(),
   unitValue: money.optional(),
-  imageUrl: z.string().url().or(z.literal("")).default(""),
-  images: z.array(z.string().url()).max(10).default([]),
+  imageUrl: httpsUrl.or(z.literal("")).default(""),
+  images: z.array(httpsUrl).max(10).default([]),
   variantGroup: optionalText(80),
   variantLabel: optionalText(40),
   ondcCategory: optionalText(80),
@@ -60,6 +80,13 @@ export const bulkCreateInput = z.object({
 
 export const bulkActionInput = z.object({
   ids: z.array(z.string()).min(1).max(1000),
-  action: z.enum(["activate", "draft", "archive", "delete", "set-category", "set-ondc-category"]),
+  action: z.enum([
+    "activate",
+    "draft",
+    "archive",
+    "delete",
+    "set-category",
+    "set-ondc-category",
+  ]),
   value: z.string().optional(),
 });

@@ -1,13 +1,29 @@
 "use client";
 
-import { Check, Download, ImageUp, Loader2, Plus, Sparkles, Trash2, UserRound } from "lucide-react";
+import {
+  Check,
+  Download,
+  ImageUp,
+  Loader2,
+  Plus,
+  Sparkles,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { api, shrinkImage, toastError, uploadFile } from "@/components/app/api";
 import { PageHeader, Section } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -17,16 +33,33 @@ interface Model {
   imageUrl: string;
 }
 
-const POSES = ["Three-quarter turn to the left", "Side profile", "Walking towards camera", "Back view", "Close-up on the garment"];
+const POSES = [
+  "Three-quarter turn to the left",
+  "Side profile",
+  "Walking towards camera",
+  "Back view",
+  "Close-up on the garment",
+];
 
-export function StudioView({ models: initialModels, modelLimit, product }: {
+export function StudioView({
+  models: initialModels,
+  modelLimit,
+  product,
+}: {
   models: Model[];
   modelLimit: number;
-  product: { id: string; name: string; imageUrl: string; images: string[] } | null;
+  product: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    images: string[];
+  } | null;
 }) {
   const params = useSearchParams();
   const router = useRouter();
-  const [tab, setTab] = useState(params.get("tab") === "tryon" ? "tryon" : "enhance");
+  const [tab, setTab] = useState(
+    params.get("tab") === "tryon" ? "tryon" : "enhance",
+  );
   return (
     <>
       <PageHeader
@@ -43,9 +76,15 @@ export function StudioView({ models: initialModels, modelLimit, product }: {
                 type="button"
                 onClick={() => {
                   setTab(id);
-                  router.replace(`?tab=${id}${product ? `&product=${product.id}` : ""}`, { scroll: false });
+                  router.replace(
+                    `?tab=${id}${product ? `&product=${product.id}` : ""}`,
+                    { scroll: false },
+                  );
                 }}
-                className={cn("rounded-md px-3 py-1.5", tab === id ? "bg-muted font-medium" : "text-muted-foreground")}
+                className={cn(
+                  "rounded-md px-3 py-1.5",
+                  tab === id ? "bg-muted font-medium" : "text-muted-foreground",
+                )}
               >
                 {label}
               </button>
@@ -53,16 +92,45 @@ export function StudioView({ models: initialModels, modelLimit, product }: {
           </div>
         }
       />
-      {tab === "enhance" ? <Enhance /> : <TryOn initialModels={initialModels} modelLimit={modelLimit} product={product} />}
+      {tab === "enhance" ? (
+        <Enhance />
+      ) : (
+        <TryOn
+          initialModels={initialModels}
+          modelLimit={modelLimit}
+          product={product}
+        />
+      )}
     </>
   );
 }
 
-function ImagePicker({ label, value, onPick, busy, aspect = "aspect-square" }: { label: string; value: string | null; onPick: (f: File) => void; busy?: boolean; aspect?: string }) {
+function ImagePicker({
+  label,
+  value,
+  onPick,
+  busy,
+  aspect = "aspect-square",
+}: {
+  label: string;
+  value: string | null;
+  onPick: (f: File) => void;
+  busy?: boolean;
+  aspect?: string;
+}) {
   return (
-    <label className={cn("relative grid cursor-pointer place-items-center overflow-hidden rounded-xl border-2 border-dashed bg-card text-center hover:border-primary/50", aspect)}>
+    <label
+      className={cn(
+        "relative grid cursor-pointer place-items-center overflow-hidden rounded-xl border-2 border-dashed bg-card text-center hover:border-primary/50",
+        aspect,
+      )}
+    >
       {value ? (
-        <img src={value} alt="" className="absolute inset-0 size-full object-contain" />
+        <img
+          src={value}
+          alt=""
+          className="absolute inset-0 size-full object-contain"
+        />
       ) : (
         <span className="flex flex-col items-center gap-2 p-6 text-sm text-muted-foreground">
           <ImageUp className="size-6" /> {label}
@@ -73,7 +141,12 @@ function ImagePicker({ label, value, onPick, busy, aspect = "aspect-square" }: {
           <Loader2 className="size-6 animate-spin" />
         </span>
       ) : null}
-      <input type="file" accept="image/*" className="sr-only" onChange={(e) => e.target.files?.[0] && onPick(e.target.files[0])} />
+      <input
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(e) => e.target.files?.[0] && onPick(e.target.files[0])}
+      />
     </label>
   );
 }
@@ -84,10 +157,19 @@ function ResultActions({ url, name }: { url: string; name: string }) {
   const createProduct = async () => {
     setSaving(true);
     try {
-      const { product } = await api<{ product: { id: string } }>("/api/products", {
-        method: "POST",
-        json: { name, type: "HANDMADE", status: "DRAFT", imageUrl: url, aiGenerated: true },
-      });
+      const { product } = await api<{ product: { id: string } }>(
+        "/api/products",
+        {
+          method: "POST",
+          json: {
+            name,
+            type: "HANDMADE",
+            status: "DRAFT",
+            imageUrl: url,
+            aiGenerated: true,
+          },
+        },
+      );
       router.push(`/dashboard/catalog/${product.id}`);
     } catch (e) {
       toastError(e);
@@ -102,7 +184,8 @@ function ResultActions({ url, name }: { url: string; name: string }) {
         </a>
       </Button>
       <Button size="sm" onClick={createProduct} disabled={saving}>
-        {saving ? <Loader2 className="animate-spin" /> : <Plus />} New product from this
+        {saving ? <Loader2 className="animate-spin" /> : <Plus />} New product
+        from this
       </Button>
     </div>
   );
@@ -125,7 +208,10 @@ function Enhance() {
     if (!file) return;
     setBusy(true);
     try {
-      const { url } = await api<{ url: string }>("/api/ai/enhance", { method: "POST", json: { image: file, prompt: direction || undefined } });
+      const { url } = await api<{ url: string }>("/api/ai/enhance", {
+        method: "POST",
+        json: { image: file, prompt: direction || undefined },
+      });
       setResult(url);
     } catch (e) {
       toastError(e);
@@ -136,16 +222,40 @@ function Enhance() {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <div className="space-y-3">
-        <ImagePicker label="Upload a product photo" value={original} onPick={pick} />
-        <Input value={direction} onChange={(e) => setDirection(e.target.value)} placeholder="Optional direction, e.g. “on a wooden table with diyas”" />
-        <Button className="w-full" size="lg" disabled={!file || busy} onClick={run}>
-          {busy ? <Loader2 className="animate-spin" /> : <Sparkles />} Enhance · 2 credits
+        <ImagePicker
+          label="Upload a product photo"
+          value={original}
+          onPick={pick}
+        />
+        <Input
+          value={direction}
+          onChange={(e) => setDirection(e.target.value)}
+          placeholder="Optional direction, e.g. “on a wooden table with diyas”"
+        />
+        <Button
+          className="w-full"
+          size="lg"
+          disabled={!file || busy}
+          onClick={run}
+        >
+          {busy ? <Loader2 className="animate-spin" /> : <Sparkles />} Enhance ·
+          2 credits
         </Button>
       </div>
       <div className="space-y-3">
         <div className="relative grid aspect-square place-items-center overflow-hidden rounded-xl border bg-muted/40">
-          {result ? <img src={result} alt="Enhanced" className="absolute inset-0 size-full object-contain" /> : (
-            <span className="text-sm text-muted-foreground">{busy ? "Working on it… (about 15 seconds)" : "Your enhanced photo appears here"}</span>
+          {result ? (
+            <img
+              src={result}
+              alt="Enhanced"
+              className="absolute inset-0 size-full object-contain"
+            />
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              {busy
+                ? "Working on it… (about 15 seconds)"
+                : "Your enhanced photo appears here"}
+            </span>
           )}
         </div>
         {result ? <ResultActions url={result} name="Untitled product" /> : null}
@@ -154,10 +264,25 @@ function Enhance() {
   );
 }
 
-function TryOn({ initialModels, modelLimit, product }: { initialModels: Model[]; modelLimit: number; product: { id: string; name: string; imageUrl: string; images: string[] } | null }) {
+function TryOn({
+  initialModels,
+  modelLimit,
+  product,
+}: {
+  initialModels: Model[];
+  modelLimit: number;
+  product: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    images: string[];
+  } | null;
+}) {
   const [models, setModels] = useState(initialModels);
   const [model, setModel] = useState<Model | null>(initialModels[0] ?? null);
-  const [garment, setGarment] = useState<string | null>(product?.imageUrl || null);
+  const [garment, setGarment] = useState<string | null>(
+    product?.imageUrl || null,
+  );
   const [garmentBusy, setGarmentBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [poses, setPoses] = useState<string[]>([]);
@@ -180,7 +305,10 @@ function TryOn({ initialModels, modelLimit, product }: { initialModels: Model[];
     setBusy("tryon");
     setPoses([]);
     try {
-      const { url } = await api<{ url: string }>("/api/ai/tryon", { method: "POST", json: { action: "tryOn", model: model.imageUrl, garment } });
+      const { url } = await api<{ url: string }>("/api/ai/tryon", {
+        method: "POST",
+        json: { action: "tryOn", model: model.imageUrl, garment },
+      });
       setResult(url);
     } catch (e) {
       toastError(e);
@@ -193,7 +321,10 @@ function TryOn({ initialModels, modelLimit, product }: { initialModels: Model[];
     if (!result) return;
     setBusy(instruction);
     try {
-      const { url } = await api<{ url: string }>("/api/ai/tryon", { method: "POST", json: { action: "pose", image: result, instruction } });
+      const { url } = await api<{ url: string }>("/api/ai/tryon", {
+        method: "POST",
+        json: { action: "pose", image: result, instruction },
+      });
       setPoses((p) => [...p, url]);
     } catch (e) {
       toastError(e);
@@ -207,7 +338,13 @@ function TryOn({ initialModels, modelLimit, product }: { initialModels: Model[];
     const all = [result, ...poses].filter(Boolean) as string[];
     setBusy("attach");
     try {
-      await api(`/api/products/${product.id}`, { method: "PATCH", json: { images: [...product.images, ...all].slice(0, 10), type: "APPAREL" } });
+      await api(`/api/products/${product.id}`, {
+        method: "PATCH",
+        json: {
+          images: [...product.images, ...all].slice(0, 10),
+          type: "APPAREL",
+        },
+      });
       toast.success(`Added ${all.length} photos to ${product.name}`);
     } catch (e) {
       toastError(e);
@@ -238,13 +375,29 @@ function TryOn({ initialModels, modelLimit, product }: { initialModels: Model[];
               <button
                 type="button"
                 onClick={() => setModel(m)}
-                className={cn("block w-28 overflow-hidden rounded-lg border-2 text-left", model?.id === m.id ? "border-primary" : "border-transparent")}
+                className={cn(
+                  "block w-28 overflow-hidden rounded-lg border-2 text-left",
+                  model?.id === m.id ? "border-primary" : "border-transparent",
+                )}
               >
-                <img src={m.imageUrl} alt="" className="aspect-[3/4] w-full object-cover" />
-                <div className="truncate bg-card px-2 py-1 text-xs">{m.name}</div>
+                <img
+                  src={m.imageUrl}
+                  alt=""
+                  className="aspect-[3/4] w-full object-cover"
+                />
+                <div className="truncate bg-card px-2 py-1 text-xs">
+                  {m.name}
+                </div>
               </button>
-              {model?.id === m.id ? <Check className="absolute top-1.5 right-1.5 size-5 rounded-full bg-primary p-0.5 text-primary-foreground" /> : null}
-              <button type="button" onClick={() => deleteModel(m)} className="absolute top-1.5 left-1.5 hidden size-6 place-items-center rounded bg-black/60 text-white group-hover:grid" aria-label={`Delete ${m.name}`}>
+              {model?.id === m.id ? (
+                <Check className="absolute top-1.5 right-1.5 size-5 rounded-full bg-primary p-0.5 text-primary-foreground" />
+              ) : null}
+              <button
+                type="button"
+                onClick={() => deleteModel(m)}
+                className="absolute top-1.5 left-1.5 hidden size-6 place-items-center rounded bg-black/60 text-white group-hover:grid"
+                aria-label={`Delete ${m.name}`}
+              >
                 <Trash2 className="size-3" />
               </button>
             </div>
@@ -264,31 +417,73 @@ function TryOn({ initialModels, modelLimit, product }: { initialModels: Model[];
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-3">
-          <h3 className="text-sm font-medium">2. The garment{product ? ` · ${product.name}` : ""}</h3>
-          <ImagePicker label="Upload the clothing, flat-lay or on a hanger" value={garment} onPick={pickGarment} busy={garmentBusy} aspect="aspect-[3/4]" />
-          <Button className="w-full" size="lg" disabled={!model || !garment || Boolean(busy)} onClick={tryOn}>
-            {busy === "tryon" ? <Loader2 className="animate-spin" /> : <Sparkles />} Put it on {model?.name ?? "the model"} · 2 credits
+          <h3 className="text-sm font-medium">
+            2. The garment{product ? ` · ${product.name}` : ""}
+          </h3>
+          <ImagePicker
+            label="Upload the clothing, flat-lay or on a hanger"
+            value={garment}
+            onPick={pickGarment}
+            busy={garmentBusy}
+            aspect="aspect-[3/4]"
+          />
+          <Button
+            className="w-full"
+            size="lg"
+            disabled={!model || !garment || Boolean(busy)}
+            onClick={tryOn}
+          >
+            {busy === "tryon" ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Sparkles />
+            )}{" "}
+            Put it on {model?.name ?? "the model"} · 2 credits
           </Button>
         </div>
         <div className="space-y-3">
           <h3 className="text-sm font-medium">3. Result</h3>
           <div className="relative grid aspect-[3/4] place-items-center overflow-hidden rounded-xl border bg-muted/40">
-            {result ? <img src={result} alt="Try-on result" className="absolute inset-0 size-full object-cover" /> : (
-              <span className="px-6 text-center text-sm text-muted-foreground">{busy === "tryon" ? "Dressing your model… (about 20 seconds)" : "Your photo appears here"}</span>
+            {result ? (
+              <img
+                src={result}
+                alt="Try-on result"
+                className="absolute inset-0 size-full object-cover"
+              />
+            ) : (
+              <span className="px-6 text-center text-sm text-muted-foreground">
+                {busy === "tryon"
+                  ? "Dressing your model… (about 20 seconds)"
+                  : "Your photo appears here"}
+              </span>
             )}
           </div>
           {result ? (
             <>
               <div className="flex flex-wrap gap-1.5">
                 {POSES.map((p) => (
-                  <Button key={p} variant="outline" size="sm" disabled={Boolean(busy)} onClick={() => pose(p)}>
-                    {busy === p ? <Loader2 className="animate-spin" /> : <Plus />} {p}
+                  <Button
+                    key={p}
+                    variant="outline"
+                    size="sm"
+                    disabled={Boolean(busy)}
+                    onClick={() => pose(p)}
+                  >
+                    {busy === p ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <Plus />
+                    )}{" "}
+                    {p}
                   </Button>
                 ))}
               </div>
               {product ? (
                 <Button onClick={attach} disabled={Boolean(busy)}>
-                  {busy === "attach" ? <Loader2 className="animate-spin" /> : null} Add {1 + poses.length} photos to {product.name}
+                  {busy === "attach" ? (
+                    <Loader2 className="animate-spin" />
+                  ) : null}{" "}
+                  Add {1 + poses.length} photos to {product.name}
                 </Button>
               ) : (
                 <ResultActions url={result} name="Untitled garment" />
@@ -302,8 +497,18 @@ function TryOn({ initialModels, modelLimit, product }: { initialModels: Model[];
         <Section title="More angles">
           <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
             {poses.map((u) => (
-              <a key={u} href={u} target="_blank" rel="noreferrer" className="overflow-hidden rounded-lg border">
-                <img src={u} alt="" className="aspect-[3/4] w-full object-cover" />
+              <a
+                key={u}
+                href={u}
+                target="_blank"
+                rel="noreferrer"
+                className="overflow-hidden rounded-lg border"
+              >
+                <img
+                  src={u}
+                  alt=""
+                  className="aspect-[3/4] w-full object-cover"
+                />
               </a>
             ))}
           </div>
@@ -322,7 +527,15 @@ function TryOn({ initialModels, modelLimit, product }: { initialModels: Model[];
   );
 }
 
-function NewModelDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (v: boolean) => void; onCreated: (m: Model) => void }) {
+function NewModelDialog({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onCreated: (m: Model) => void;
+}) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -334,7 +547,10 @@ function NewModelDialog({ open, onOpenChange, onCreated }: { open: boolean; onOp
     setResult(null);
     setBusy(true);
     try {
-      const { url } = await api<{ url: string }>("/api/ai/tryon", { method: "POST", json: { action: "model", person: dataUrl } });
+      const { url } = await api<{ url: string }>("/api/ai/tryon", {
+        method: "POST",
+        json: { action: "model", person: dataUrl },
+      });
       setResult(url);
     } catch (e) {
       toastError(e);
@@ -345,7 +561,10 @@ function NewModelDialog({ open, onOpenChange, onCreated }: { open: boolean; onOp
   const save = async () => {
     if (!result) return;
     try {
-      const { model } = await api<{ model: Model }>("/api/models", { method: "POST", json: { name: name || "Model", imageUrl: result } });
+      const { model } = await api<{ model: Model }>("/api/models", {
+        method: "POST",
+        json: { name: name || "Model", imageUrl: result },
+      });
       onCreated(model);
       onOpenChange(false);
       setPhoto(null);
@@ -360,15 +579,37 @@ function NewModelDialog({ open, onOpenChange, onCreated }: { open: boolean; onOp
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create a model</DialogTitle>
-          <DialogDescription>Upload a clear, full-length photo. We turn it into a clean studio model shot you can reuse. Only use photos of people who've agreed.</DialogDescription>
+          <DialogDescription>
+            Upload a clear, full-length photo. We turn it into a clean studio
+            model shot you can reuse. Only use photos of people who've agreed.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-3">
-          <ImagePicker label="Full-length photo" value={photo} onPick={pick} aspect="aspect-[3/4]" />
+          <ImagePicker
+            label="Full-length photo"
+            value={photo}
+            onPick={pick}
+            aspect="aspect-[3/4]"
+          />
           <div className="relative grid aspect-[3/4] place-items-center overflow-hidden rounded-xl border bg-muted/40 text-center text-xs text-muted-foreground">
-            {result ? <img src={result} alt="" className="absolute inset-0 size-full object-cover" /> : busy ? <Loader2 className="size-5 animate-spin" /> : "Studio version"}
+            {result ? (
+              <img
+                src={result}
+                alt=""
+                className="absolute inset-0 size-full object-cover"
+              />
+            ) : busy ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : (
+              "Studio version"
+            )}
           </div>
         </div>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name, e.g. Priya" />
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name, e.g. Priya"
+        />
         <DialogFooter>
           <Button disabled={!result} onClick={save}>
             Save model

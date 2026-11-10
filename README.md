@@ -1,54 +1,72 @@
-# Onboarder Dashboard
+# Onboarder
 
-Onboarder is an AI-powered dashboard that allows users to upload product images and automatically generate structured product data, including images, titles, and descriptions. Depending on the product type, different AI models and web scrapers are utilized to retrieve and refine product details. Users can review, edit, and export their product catalogue for use on e-commerce platforms.
+Onboarder takes India's neighbourhood shops online. A kirana stocks well over a thousand
+items; Onboarder turns that shelf into an online catalog in an afternoon and sells it on
+ONDC, Shopify, Amazon.in, Flipkart and a free WhatsApp storefront.
 
-## Features
+Live at <https://onboarder.store>.
 
-- **AI-Powered Product Recognition**:
-  - Detects and extracts product details from uploaded images.
-  - Generates four AI-enhanced images, a title, and a description.
-- **Barcode-Based Web Scraping**:
-  - Fetches product images, title, and description from Amazon/Google using the barcode.
-- **Product Editing**:
-  - Users can select the best image from the generated options.
-  - Edit product title and description.
-  - Add a price field to any product.
-- **Product Catalogue Management**:
-  - Save products in a structured format.
-  - Export catalogue for e-commerce integration.
+## Three lanes for three kinds of products
 
+| Lane | For | How |
+| --- | --- | --- |
+| **Packaged** (organised) | Anything with a barcode | Continuous camera scanning (native `BarcodeDetector`, zxing fallback) or a USB scanner. Barcodes resolve via go-upc and Open Food Facts; scanning twice counts stock. |
+| **Loose** (un-organised) | Atta, dal, rice, spices, vegetables | A 100+ item starter catalog with Hindi names. Enter a rate per kg, pick pack sizes; each pack becomes a SKU grouped as variants. AI creates the photos. |
+| **Handmade** (custom) | Art, craft, apparel, décor | Photograph it; AI names it, writes the listing and produces a studio image. Apparel can be shown on a model with virtual try-on. |
 
-## Installation & Setup
+Plus CSV import (Excel, Tally, Vyapar, Marg) and manual entry.
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/ommgh/Onboarder.git
-   cd Onboarder
-   ```
-2. Install dependencies:
-   ```sh
-   npm install
-   ```
-3. Set up environment variables in `.env` file:
-   ```sh
-   NEXT_PUBLIC_API_KEY=your_api_key
-   DATABASE_URL=your_database_url
-   AI_MODEL_ENDPOINT=your_ai_model_endpoint
-   ```
-4. Start the development server:
-   ```sh
-   npm run dev
-   ```
+## Selling
 
-## Usage
+- **ONDC**: Onboarder is a seller app on the network. See [docs/ondc.md](docs/ondc.md).
+- **Shopify**: OAuth (expiring offline tokens), products pushed with `productSet` (pack sizes become a Size option), recent orders imported.
+- **Amazon.in**: SP-API; barcode products are matched to existing ASINs and listed as offers.
+- **Flipkart**: generates a listing sheet for Seller Hub (Flipkart has no open listing API for new products).
+- **Storefront**: `/s/<shop>`, a public mobile catalog with WhatsApp ordering.
 
-1. Upload a product image.
-2. Select product type:
-   - **Unorganised**: AI detects product and generates images, title, and description.
-   - **Organised**: AI extracts barcode and fetches details via web scraping.
-   - **Unique**: AI enchances the product image quality and presentation.
-3. Review and edit product details.
-4. Save product to the catalogue.
-5. Export catalogue for e-commerce platforms.
+The dashboard also covers orders (including counter / WhatsApp sales), analytics with
+plain-language recommendations, listing-quality scores, a photo studio and a brand kit.
 
+## Stack
 
+Next.js 15 (App Router) · React 19 · TypeScript · Tailwind 4 · shadcn/ui · Prisma + Postgres ·
+Auth.js · Google Gemini · UploadThing · Resend · Dodo Payments · Biome.
+
+## Development
+
+```sh
+pnpm install
+cp .env.example .env.local        # fill in the Core block at minimum
+docker run -d --name onboarder-pg -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=onboarder -p 54329:5432 postgres:17-alpine
+pnpm db:push
+pnpm seed:demo                    # demo@onboarder.local / demo1234
+pnpm dev
+```
+
+| Command | |
+| --- | --- |
+| `pnpm test` | Unit tests (ONDC crypto vs. official test vector, catalog, quotes, units, CSV, quality) |
+| `pnpm test:ondc` | End-to-end ONDC transaction against a mock buyer app ([docs/ondc.md](docs/ondc.md#testing-locally)) |
+| `pnpm lint` | Biome |
+| `pnpm build` | Production build |
+
+## Database changes
+
+The schema is applied with `prisma db push`. Every change is kept **additive** (new tables,
+nullable or defaulted columns, `@map` for renames) so pushing to production never drops
+data. When editing `prisma/schema.prisma`, push to a copy of production first and make sure
+Prisma reports no data-loss warnings.
+
+## Project layout
+
+```
+app/(landing)        marketing site
+app/(protected)      seller dashboard
+app/s/[slug]         public storefronts
+app/api              JSON API, ONDC endpoints, channel OAuth callbacks
+lib/ondc             ONDC protocol (pure modules are unit-tested)
+lib/channels         Shopify, Amazon, Flipkart
+lib/products         schema, quality scoring, units, CSV, kirana catalog
+lib/server           auth guards, AI, storage, analytics (server-only)
+scripts              seeding, ONDC keys / subscribe / e2e
+```

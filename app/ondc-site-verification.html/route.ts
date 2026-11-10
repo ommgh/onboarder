@@ -1,4 +1,8 @@
-import { isOndcConfigured, ondcConfig, siteVerificationSignature } from "@/lib/ondc/server";
+import {
+  isOndcConfigured,
+  ondcConfig,
+  siteVerificationSignature,
+} from "@/lib/ondc/server";
 
 export const dynamic = "force-dynamic";
 
@@ -14,5 +18,7 @@ export function GET() {
   </head>
   <body>ONDC Site Verification Page</body>
 </html>`;
-  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+  return new Response(html, {
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
 }

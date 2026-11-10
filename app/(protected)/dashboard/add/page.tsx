@@ -1,4 +1,12 @@
-import { ArrowRight, Barcode, FileSpreadsheet, Hand, PenLine, Shirt, Wheat } from "lucide-react";
+import {
+  ArrowRight,
+  Barcode,
+  FileSpreadsheet,
+  Hand,
+  PenLine,
+  Shirt,
+  Wheat,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/app/page-header";
@@ -53,11 +61,17 @@ export default function AddHub() {
               <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
                 <l.icon className="size-5" />
               </span>
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{l.kicker}</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {l.kicker}
+              </span>
             </div>
             <h2 className="mt-5 text-lg font-semibold">{l.title}</h2>
-            <p className="mt-1.5 flex-1 text-sm text-muted-foreground text-pretty">{l.body}</p>
-            <div className="mt-5 border-t pt-3 text-xs text-muted-foreground">{l.examples}</div>
+            <p className="mt-1.5 flex-1 text-sm text-muted-foreground text-pretty">
+              {l.body}
+            </p>
+            <div className="mt-5 border-t pt-3 text-xs text-muted-foreground">
+              {l.examples}
+            </div>
             <div className="mt-3 flex items-center justify-between text-sm">
               <span className="font-medium text-primary">{l.speed}</span>
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
@@ -68,11 +82,30 @@ export default function AddHub() {
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         {[
-          { href: "/dashboard/add/import", icon: FileSpreadsheet, title: "Import a spreadsheet", body: "CSV from Excel, Tally, Vyapar or Marg" },
-          { href: "/dashboard/studio?tab=tryon", icon: Shirt, title: "Clothing on a model", body: "Virtual try-on with your own models" },
-          { href: "/dashboard/catalog/new", icon: PenLine, title: "Type it in", body: "Add a single product by hand" },
+          {
+            href: "/dashboard/add/import",
+            icon: FileSpreadsheet,
+            title: "Import a spreadsheet",
+            body: "CSV from Excel, Tally, Vyapar or Marg",
+          },
+          {
+            href: "/dashboard/studio?tab=tryon",
+            icon: Shirt,
+            title: "Clothing on a model",
+            body: "Virtual try-on with your own models",
+          },
+          {
+            href: "/dashboard/catalog/new",
+            icon: PenLine,
+            title: "Type it in",
+            body: "Add a single product by hand",
+          },
         ].map((l) => (
-          <Link key={l.href} href={l.href} className="flex items-center gap-3 rounded-xl border bg-card p-4 hover:bg-accent/30">
+          <Link
+            key={l.href}
+            href={l.href}
+            className="flex items-center gap-3 rounded-xl border bg-card p-4 hover:bg-accent/30"
+          >
             <l.icon className="size-5 shrink-0 text-muted-foreground" />
             <div>
               <div className="text-sm font-medium">{l.title}</div>

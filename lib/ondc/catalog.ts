@@ -36,7 +36,12 @@ export function productDomain(p: OndcProduct): string | null {
 }
 
 export function isProductListable(p: OndcProduct): boolean {
-  return Boolean(p.price && p.price > 0 && p.ondcCategory && (p.stock === null || p.stock > 0));
+  return Boolean(
+    p.price &&
+      p.price > 0 &&
+      p.ondcCategory &&
+      (p.stock === null || p.stock > 0),
+  );
 }
 
 export function consumerCare(store: OndcStore): string {
@@ -50,12 +55,18 @@ export function consumerCare(store: OndcStore): string {
 function storeFulfillments(store: OndcStore) {
   const contact = { phone: store.phone ?? "", email: store.email ?? "" };
   const out: Json[] = [];
-  if (store.deliveryEnabled) out.push({ id: DELIVERY_FULFILLMENT_ID, type: "Delivery", contact });
-  if (store.pickupEnabled) out.push({ id: PICKUP_FULFILLMENT_ID, type: "Self-Pickup", contact });
+  if (store.deliveryEnabled)
+    out.push({ id: DELIVERY_FULFILLMENT_ID, type: "Delivery", contact });
+  if (store.pickupEnabled)
+    out.push({ id: PICKUP_FULFILLMENT_ID, type: "Self-Pickup", contact });
   return out;
 }
 
-export function buildItem(store: OndcStore, p: OndcProduct, opts: CatalogOptions): Json {
+export function buildItem(
+  store: OndcStore,
+  p: OndcProduct,
+  opts: CatalogOptions,
+): Json {
   const price = p.price ?? 0;
   const images = [p.imageUrl, ...p.images].filter(Boolean);
   if (images.length === 0) images.push(opts.placeholderImage(p.id));
@@ -90,7 +101,9 @@ export function buildItem(store: OndcStore, p: OndcProduct, opts: CatalogOptions
       maximum_value: money(Math.max(p.mrp ?? price, price)),
     },
     category_id: p.ondcCategory,
-    fulfillment_id: store.deliveryEnabled ? DELIVERY_FULFILLMENT_ID : PICKUP_FULFILLMENT_ID,
+    fulfillment_id: store.deliveryEnabled
+      ? DELIVERY_FULFILLMENT_ID
+      : PICKUP_FULFILLMENT_ID,
     location_id: locationId(store.id),
     "@ondc/org/returnable": store.returnable,
     "@ondc/org/cancellable": true,
@@ -100,7 +113,10 @@ export function buildItem(store: OndcStore, p: OndcProduct, opts: CatalogOptions
     "@ondc/org/available_on_cod": store.codEnabled,
     "@ondc/org/contact_details_consumer_care": consumerCare(store),
     tags: [
-      { code: "origin", list: [{ code: "country", value: p.countryOfOrigin || "IND" }] },
+      {
+        code: "origin",
+        list: [{ code: "country", value: p.countryOfOrigin || "IND" }],
+      },
     ],
   };
 
@@ -111,9 +127,13 @@ export function buildItem(store: OndcStore, p: OndcProduct, opts: CatalogOptions
     item["@ondc/org/statutory_reqs_packaged_commodities"] = {
       manufacturer_or_packer_name: p.manufacturer || p.brand || store.name,
       manufacturer_or_packer_address:
-        p.manufacturerAddress || [store.addressLine, store.city, store.pincode].filter(Boolean).join(", "),
+        p.manufacturerAddress ||
+        [store.addressLine, store.city, store.pincode]
+          .filter(Boolean)
+          .join(", "),
       common_or_generic_name_of_commodity: p.commonName || p.name,
-      month_year_of_manufacture_packing_import: "Please refer to the product label",
+      month_year_of_manufacture_packing_import:
+        "Please refer to the product label",
     };
   }
   if (isFood) {
@@ -140,11 +160,17 @@ export function buildItem(store: OndcStore, p: OndcProduct, opts: CatalogOptions
 
 export const variantCategoryId = (group: string) => `VG-${group}`.slice(0, 64);
 
-export function buildProvider(store: OndcStore, products: OndcProduct[], opts: CatalogOptions): Json {
+export function buildProvider(
+  store: OndcStore,
+  products: OndcProduct[],
+  opts: CatalogOptions,
+): Json {
   const listable = products.filter(
     (p) => isProductListable(p) && productDomain(p) === opts.domain,
   );
-  const groups = [...new Set(listable.map((p) => p.variantGroup).filter(Boolean))] as string[];
+  const groups = [
+    ...new Set(listable.map((p) => p.variantGroup).filter(Boolean)),
+  ] as string[];
   const gps =
     store.latitude != null && store.longitude != null
       ? `${store.latitude.toFixed(6)},${store.longitude.toFixed(6)}`
@@ -189,7 +215,12 @@ export function buildProvider(store: OndcStore, products: OndcProduct[], opts: C
     ],
     categories: groups.map((g) => ({
       id: variantCategoryId(g),
-      descriptor: { name: listable.find((p) => p.variantGroup === g)?.name.replace(/\s*[-–]\s*[\d.]+\s*\w+$/, "") ?? g },
+      descriptor: {
+        name:
+          listable
+            .find((p) => p.variantGroup === g)
+            ?.name.replace(/\s*[-–]\s*[\d.]+\s*\w+$/, "") ?? g,
+      },
       tags: [
         { code: "type", list: [{ code: "type", value: "variant_group" }] },
         {
@@ -207,7 +238,10 @@ export function buildProvider(store: OndcStore, products: OndcProduct[], opts: C
         code: "serviceability",
         list: [
           { code: "location", value: locationId(store.id) },
-          { code: "category", value: listable[0]?.ondcCategory ?? "Foodgrains" },
+          {
+            code: "category",
+            value: listable[0]?.ondcCategory ?? "Foodgrains",
+          },
           { code: "type", value: "10" }, // 10 = hyperlocal radius
           { code: "val", value: String(store.serviceRadiusKm) },
           { code: "unit", value: "km" },
@@ -247,11 +281,14 @@ export function distanceKm(a: [number, number], b: [number, number]): number {
   const dLat = toRad(b[0] - a[0]);
   const dLon = toRad(b[1] - a[1]);
   const h =
-    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLon / 2) ** 2;
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-export function parseGps(gps: string | undefined | null): [number, number] | null {
+export function parseGps(
+  gps: string | undefined | null,
+): [number, number] | null {
   if (!gps) return null;
   const [lat, lng] = gps.split(",").map((s) => Number(s.trim()));
   return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;

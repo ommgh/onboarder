@@ -17,12 +17,14 @@ const REGISTRIES = {
   preprod: {
     subscribe: "https://preprod.registry.ondc.org/ondc/subscribe",
     lookup: "https://preprod.registry.ondc.org/v2.0/lookup",
-    encryptionPublicKey: "MCowBQYDK2VuAyEARa/WcMCzNQp4DWjvTI4DK7vHL6EdaHqN4GjFIu9wxxM=",
+    encryptionPublicKey:
+      "MCowBQYDK2VuAyEARa/WcMCzNQp4DWjvTI4DK7vHL6EdaHqN4GjFIu9wxxM=",
   },
   prod: {
     subscribe: "https://prod.registry.ondc.org/subscribe",
     lookup: "https://prod.registry.ondc.org/v2.0/lookup",
-    encryptionPublicKey: "MCowBQYDK2VuAyEAwASk2D4O3p/tuD8f9sNQAQlwOU2w3DAumcOK9qHCFwI=",
+    encryptionPublicKey:
+      "MCowBQYDK2VuAyEAwASk2D4O3p/tuD8f9sNQAQlwOU2w3DAumcOK9qHCFwI=",
   },
 } as const;
 
@@ -49,7 +51,9 @@ export function ondcConfig() {
 
 export function isOndcConfigured() {
   const c = ondcConfig();
-  return Boolean(c.uniqueKeyId && c.signingPrivateKey && c.encryptionPrivateKey);
+  return Boolean(
+    c.uniqueKeyId && c.signingPrivateKey && c.encryptionPrivateKey,
+  );
 }
 
 // ---------------------------------------------------------------------------------------
@@ -58,13 +62,20 @@ export function isOndcConfigured() {
 const keyCache = new Map<string, { key: string; at: number }>();
 const KEY_TTL_MS = 60 * 60 * 1000;
 
-export async function lookupSigningKey(subscriberId: string, uniqueKeyId: string): Promise<string | null> {
+export async function lookupSigningKey(
+  subscriberId: string,
+  uniqueKeyId: string,
+): Promise<string | null> {
   const cacheKey = `${subscriberId}|${uniqueKeyId}`;
   const hit = keyCache.get(cacheKey);
   if (hit && Date.now() - hit.at < KEY_TTL_MS) return hit.key;
 
   const c = ondcConfig();
-  const body = JSON.stringify({ subscriber_id: subscriberId, ukId: uniqueKeyId, country: "IND" });
+  const body = JSON.stringify({
+    subscriber_id: subscriberId,
+    ukId: uniqueKeyId,
+    country: "IND",
+  });
   const res = await fetch(c.registry.lookup, {
     method: "POST",
     headers: {
@@ -81,7 +92,11 @@ export async function lookupSigningKey(subscriberId: string, uniqueKeyId: string
   if (!res?.ok) return null;
   const entries = (await res.json().catch(() => [])) as Json[];
   const entry = Array.isArray(entries)
-    ? entries.find((e) => e.subscriber_id === subscriberId && (e.ukId === uniqueKeyId || e.unique_key_id === uniqueKeyId))
+    ? entries.find(
+        (e) =>
+          e.subscriber_id === subscriberId &&
+          (e.ukId === uniqueKeyId || e.unique_key_id === uniqueKeyId),
+      )
     : null;
   const key: string | undefined = entry?.signing_public_key;
   if (!key) return null;
@@ -89,20 +104,33 @@ export async function lookupSigningKey(subscriberId: string, uniqueKeyId: string
   return key;
 }
 
-export type VerifyResult = { ok: true; sender?: ParsedAuthHeader } | { ok: false; reason: string };
+export type VerifyResult =
+  | { ok: true; sender?: ParsedAuthHeader }
+  | { ok: false; reason: string };
 
-export async function verifyIncoming(rawBody: string, headers: Headers): Promise<VerifyResult> {
+export async function verifyIncoming(
+  rawBody: string,
+  headers: Headers,
+): Promise<VerifyResult> {
   const c = ondcConfig();
   if (!c.verifySignatures) return { ok: true };
   const parsed = parseAuthorizationHeader(headers.get("authorization"));
-  if (!parsed) return { ok: false, reason: "Missing or malformed Authorization header" };
+  if (!parsed)
+    return { ok: false, reason: "Missing or malformed Authorization header" };
   const key = await lookupSigningKey(parsed.subscriberId, parsed.uniqueKeyId);
-  if (!key) return { ok: false, reason: `No registry key for ${parsed.subscriberId}` };
-  if (!verifyAuthorizationHeader(rawBody, parsed, key)) return { ok: false, reason: "Signature verification failed" };
+  if (!key)
+    return { ok: false, reason: `No registry key for ${parsed.subscriberId}` };
+  if (!verifyAuthorizationHeader(rawBody, parsed, key))
+    return { ok: false, reason: "Signature verification failed" };
 
-  const gateway = parseAuthorizationHeader(headers.get("x-gateway-authorization"));
+  const gateway = parseAuthorizationHeader(
+    headers.get("x-gateway-authorization"),
+  );
   if (gateway) {
-    const gwKey = await lookupSigningKey(gateway.subscriberId, gateway.uniqueKeyId);
+    const gwKey = await lookupSigningKey(
+      gateway.subscriberId,
+      gateway.uniqueKeyId,
+    );
     if (!gwKey || !verifyAuthorizationHeader(rawBody, gateway, gwKey)) {
       return { ok: false, reason: "Gateway signature verification failed" };
     }
@@ -120,10 +148,16 @@ export function siteVerificationSignature(): string {
 
 export const ACK = { message: { ack: { status: "ACK" } } };
 export function nack(type: string, code: string, message: string) {
-  return { message: { ack: { status: "NACK" } }, error: { type, code, message } };
+  return {
+    message: { ack: { status: "NACK" } },
+    error: { type, code, message },
+  };
 }
 
-export function callbackContext(ctx: BecknContext, action: string): BecknContext {
+export function callbackContext(
+  ctx: BecknContext,
+  action: string,
+): BecknContext {
   const c = ondcConfig();
   return {
     ...ctx,
@@ -158,7 +192,11 @@ export async function logOndc(entry: {
 }
 
 /** Sends a signed callback (on_search, on_select, ...) to the buyer app. */
-export async function sendCallback(ctx: BecknContext, message: Json, error?: Json) {
+export async function sendCallback(
+  ctx: BecknContext,
+  message: Json,
+  error?: Json,
+) {
   const c = ondcConfig();
   const payload: Json = { context: ctx, message };
   if (error) payload.error = error;

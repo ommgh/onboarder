@@ -1,14 +1,18 @@
 "use client";
 
-import { CardWrapper } from "./card-wrapper";
-import { BeatLoader } from "react-spinners";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { newVerification } from "@/actions/new-verification";
-import { FormSuccess } from "../form-sucess";
 import { FormError } from "../form-error";
+import { FormSuccess } from "../form-sucess";
+import { CardWrapper } from "./card-wrapper";
 
-const SearchParamsHandler = ({ setToken }: { setToken: (token: string | null) => void }) => {
+const SearchParamsHandler = ({
+  setToken,
+}: {
+  setToken: (token: string | null) => void;
+}) => {
   const searchParams = useSearchParams();
   setToken(searchParams.get("token"));
   return null;
@@ -50,7 +54,9 @@ export const NewVerificationForm = () => {
         <SearchParamsHandler setToken={setToken} />
       </Suspense>
       <div className="flex items-center w-full justify-center">
-        {!success && !error && <BeatLoader />}
+        {!success && !error && (
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        )}
         <FormSuccess message={success || undefined} />
         <FormError message={error || undefined} />
       </div>

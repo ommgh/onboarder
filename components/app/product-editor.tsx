@@ -1,12 +1,28 @@
 "use client";
 
-import { Check, ExternalLink, ImagePlus, Loader2, Sparkles, Star, Trash2, Wand2, X } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  ImagePlus,
+  Loader2,
+  Sparkles,
+  Star,
+  Trash2,
+  Wand2,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { api, shrinkImage, toastError, uploadFile } from "@/components/app/api";
-import { Field, MoneyInput, NativeSelect, OndcCategorySelect, UnitSelect } from "@/components/app/fields";
+import {
+  Field,
+  MoneyInput,
+  NativeSelect,
+  OndcCategorySelect,
+  UnitSelect,
+} from "@/components/app/fields";
 import { PageHeader, Section } from "@/components/app/page-header";
 import { LISTING_STATUS, Pill } from "@/components/app/status";
 import {
@@ -55,6 +71,7 @@ type Form = {
   gstRate: string;
 };
 
+const numeric = (v: string) => (v === "" ? null : Number(v));
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 
 function toForm(p?: ProductDTO): Form {
@@ -124,14 +141,19 @@ export function ProductEditor({ product, store, connected }: Props) {
   const [saved, setSaved] = useState<Form>(() => toForm(product));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [aiBusy, setAiBusy] = useState<null | "copy" | "enhance" | "photo">(null);
-  const [suggestion, setSuggestion] = useState<{ name: string; description: string } | null>(null);
+  const [aiBusy, setAiBusy] = useState<null | "copy" | "enhance" | "photo">(
+    null,
+  );
+  const [suggestion, setSuggestion] = useState<{
+    name: string;
+    description: string;
+  } | null>(null);
   const [publishing, setPublishing] = useState<string | null>(null);
   const [listings, setListings] = useState(product?.listings ?? []);
-  const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof Form>(k: K, v: Form[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
   const dirty = JSON.stringify(form) !== JSON.stringify(saved);
 
-  const numeric = (v: string) => (v === "" ? null : Number(v));
   const quality = useMemo(
     () =>
       scoreListing({
@@ -166,7 +188,10 @@ export function ProductEditor({ product, store, connected }: Props) {
     setSaving(true);
     try {
       if (product) {
-        const { product: p } = await api<{ product: ProductDTO }>(`/api/products/${product.id}`, { method: "PATCH", json: toPayload(form) });
+        const { product: p } = await api<{ product: ProductDTO }>(
+          `/api/products/${product.id}`,
+          { method: "PATCH", json: toPayload(form) },
+        );
         const next = toForm(p);
         setForm(next);
         setSaved(next);
@@ -174,7 +199,10 @@ export function ProductEditor({ product, store, connected }: Props) {
         toast.success("Saved");
         router.refresh();
       } else {
-        const { product: p } = await api<{ product: ProductDTO }>("/api/products", { method: "POST", json: toPayload(form) });
+        const { product: p } = await api<{ product: ProductDTO }>(
+          "/api/products",
+          { method: "POST", json: toPayload(form) },
+        );
         toast.success("Product added");
         router.replace(`/dashboard/catalog/${p.id}`);
       }
@@ -189,7 +217,8 @@ export function ProductEditor({ product, store, connected }: Props) {
     setUploading(true);
     try {
       const urls: string[] = [];
-      for (const f of [...files].slice(0, 6)) urls.push(await uploadFile((await shrinkImage(f)).file));
+      for (const f of [...files].slice(0, 6))
+        urls.push(await uploadFile((await shrinkImage(f)).file));
       setForm((cur) => {
         const all = [cur.imageUrl, ...cur.images, ...urls].filter(Boolean);
         return { ...cur, imageUrl: all[0] ?? "", images: all.slice(1, 10) };
@@ -202,7 +231,12 @@ export function ProductEditor({ product, store, connected }: Props) {
   };
 
   const photos = [form.imageUrl, ...form.images].filter(Boolean);
-  const makeMain = (url: string) => setForm((f) => ({ ...f, imageUrl: url, images: [f.imageUrl, ...f.images].filter((u) => u && u !== url) }));
+  const makeMain = (url: string) =>
+    setForm((f) => ({
+      ...f,
+      imageUrl: url,
+      images: [f.imageUrl, ...f.images].filter((u) => u && u !== url),
+    }));
   const removePhoto = (url: string) =>
     setForm((f) => {
       const rest = [f.imageUrl, ...f.images].filter((u) => u && u !== url);
@@ -213,9 +247,18 @@ export function ProductEditor({ product, store, connected }: Props) {
     if (!form.imageUrl) return;
     setAiBusy("enhance");
     try {
-      const { url } = await api<{ url: string }>("/api/ai/enhance", { method: "POST", json: { image: form.imageUrl, name: form.name } });
-      setForm((f) => ({ ...f, imageUrl: url, images: [f.imageUrl, ...f.images].slice(0, 9) }));
-      toast.success("Enhanced photo added as the main image. The original is kept.");
+      const { url } = await api<{ url: string }>("/api/ai/enhance", {
+        method: "POST",
+        json: { image: form.imageUrl, name: form.name },
+      });
+      setForm((f) => ({
+        ...f,
+        imageUrl: url,
+        images: [f.imageUrl, ...f.images].slice(0, 9),
+      }));
+      toast.success(
+        "Enhanced photo added as the main image. The original is kept.",
+      );
     } catch (e) {
       toastError(e);
     } finally {
@@ -228,7 +271,10 @@ export function ProductEditor({ product, store, connected }: Props) {
     if (dirty) await save();
     setAiBusy("photo");
     try {
-      const { url } = await api<{ url: string }>("/api/ai/photo", { method: "POST", json: { productId: product.id } });
+      const { url } = await api<{ url: string }>("/api/ai/photo", {
+        method: "POST",
+        json: { productId: product.id },
+      });
       setForm((f) => ({ ...f, imageUrl: url }));
       setSaved((f) => ({ ...f, imageUrl: url }));
       toast.success("Photo created");
@@ -240,11 +286,17 @@ export function ProductEditor({ product, store, connected }: Props) {
   };
 
   const improveCopy = async () => {
-    if (!product) return toast.message("Save the product first, then AI can improve it.");
+    if (!product)
+      return toast.message("Save the product first, then AI can improve it.");
     if (dirty) await save();
     setAiBusy("copy");
     try {
-      setSuggestion(await api<{ name: string; description: string }>("/api/ai/copy", { method: "POST", json: { productId: product.id } }));
+      setSuggestion(
+        await api<{ name: string; description: string }>("/api/ai/copy", {
+          method: "POST",
+          json: { productId: product.id },
+        }),
+      );
     } catch (e) {
       toastError(e);
     } finally {
@@ -257,14 +309,22 @@ export function ProductEditor({ product, store, connected }: Props) {
     if (dirty) await save();
     setPublishing(provider);
     try {
-      const r = await api<{ results: { ok: boolean; message?: string }[] }>(`/api/channels/${provider}/publish`, {
-        method: "POST",
-        json: { productIds: [product.id] },
-      });
+      const r = await api<{ results: { ok: boolean; message?: string }[] }>(
+        `/api/channels/${provider}/publish`,
+        {
+          method: "POST",
+          json: { productIds: [product.id] },
+        },
+      );
       const res = r.results[0];
-      if (res?.ok) toast.success(`Live on ${provider === "shopify" ? "Shopify" : "Amazon"}`);
+      if (res?.ok)
+        toast.success(
+          `Live on ${provider === "shopify" ? "Shopify" : "Amazon"}`,
+        );
       else toast.error(res?.message ?? "Couldn't publish");
-      const { product: p } = await api<{ product: ProductDTO }>(`/api/products/${product.id}`);
+      const { product: p } = await api<{ product: ProductDTO }>(
+        `/api/products/${product.id}`,
+      );
       setListings(p.listings ?? []);
     } catch (e) {
       toastError(e);
@@ -297,26 +357,41 @@ export function ProductEditor({ product, store, connected }: Props) {
             {product ? (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Delete product">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Delete product"
+                  >
                     <Trash2 />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete this product?</AlertDialogTitle>
-                    <AlertDialogDescription>It's removed from your catalog and stops showing on ONDC. Listings already pushed to Shopify or Amazon stay there until you remove them.</AlertDialogDescription>
+                    <AlertDialogDescription>
+                      It's removed from your catalog and stops showing on ONDC.
+                      Listings already pushed to Shopify or Amazon stay there
+                      until you remove them.
+                    </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90" onClick={remove}>
+                    <AlertDialogAction
+                      className="bg-destructive text-white hover:bg-destructive/90"
+                      onClick={remove}
+                    >
                       Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             ) : null}
-            <Button onClick={save} disabled={saving || (!dirty && Boolean(product))}>
-              {saving ? <Loader2 className="animate-spin" /> : <Check />} {product ? (dirty ? "Save changes" : "Saved") : "Add product"}
+            <Button
+              onClick={save}
+              disabled={saving || (!dirty && Boolean(product))}
+            >
+              {saving ? <Loader2 className="animate-spin" /> : <Check />}{" "}
+              {product ? (dirty ? "Save changes" : "Saved") : "Add product"}
             </Button>
           </>
         }
@@ -324,45 +399,97 @@ export function ProductEditor({ product, store, connected }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
-          <Section title="Photos" description="The first photo is the main image on every channel.">
+          <Section
+            title="Photos"
+            description="The first photo is the main image on every channel."
+          >
             <div className="flex flex-wrap gap-3 p-5">
               {photos.map((url, i) => (
-                <div key={url} className="group relative size-28 overflow-hidden rounded-lg border bg-white">
+                <div
+                  key={url}
+                  className="group relative size-28 overflow-hidden rounded-lg border bg-white"
+                >
                   <img src={url} alt="" className="size-full object-cover" />
-                  {i === 0 ? <span className="absolute top-1 left-1 rounded bg-black/60 px-1.5 text-[10px] text-white">Main</span> : null}
+                  {i === 0 ? (
+                    <span className="absolute top-1 left-1 rounded bg-black/60 px-1.5 text-[10px] text-white">
+                      Main
+                    </span>
+                  ) : null}
                   <div className="absolute inset-x-1 bottom-1 flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                     {i > 0 ? (
-                      <button type="button" onClick={() => makeMain(url)} className="grid size-7 place-items-center rounded bg-white/90 text-stone-800 shadow" aria-label="Make main photo">
+                      <button
+                        type="button"
+                        onClick={() => makeMain(url)}
+                        className="grid size-7 place-items-center rounded bg-white/90 text-stone-800 shadow"
+                        aria-label="Make main photo"
+                      >
                         <Star className="size-3.5" />
                       </button>
                     ) : null}
-                    <button type="button" onClick={() => removePhoto(url)} className="grid size-7 place-items-center rounded bg-white/90 text-stone-800 shadow" aria-label="Remove photo">
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(url)}
+                      className="grid size-7 place-items-center rounded bg-white/90 text-stone-800 shadow"
+                      aria-label="Remove photo"
+                    >
                       <X className="size-3.5" />
                     </button>
                   </div>
                 </div>
               ))}
               <label className="grid size-28 cursor-pointer place-items-center rounded-lg border-2 border-dashed text-center text-xs text-muted-foreground hover:border-primary/50 hover:text-foreground">
-                {uploading ? <Loader2 className="size-5 animate-spin" /> : (
+                {uploading ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
                   <span className="flex flex-col items-center gap-1">
                     <ImagePlus className="size-5" /> Add photos
                   </span>
                 )}
-                <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => e.target.files && addPhotos(e.target.files)} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="sr-only"
+                  onChange={(e) => e.target.files && addPhotos(e.target.files)}
+                />
               </label>
             </div>
             <div className="flex flex-wrap gap-2 border-t px-5 py-3">
-              <Button variant="outline" size="sm" disabled={!form.imageUrl || Boolean(aiBusy)} onClick={enhanceMain}>
-                {aiBusy === "enhance" ? <Loader2 className="animate-spin" /> : <Sparkles />} Enhance main photo
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!form.imageUrl || Boolean(aiBusy)}
+                onClick={enhanceMain}
+              >
+                {aiBusy === "enhance" ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Sparkles />
+                )}{" "}
+                Enhance main photo
               </Button>
               {product && !photos.length ? (
-                <Button variant="outline" size="sm" disabled={Boolean(aiBusy)} onClick={generatePhoto}>
-                  {aiBusy === "photo" ? <Loader2 className="animate-spin" /> : <Wand2 />} Create a photo with AI
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={Boolean(aiBusy)}
+                  onClick={generatePhoto}
+                >
+                  {aiBusy === "photo" ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Wand2 />
+                  )}{" "}
+                  Create a photo with AI
                 </Button>
               ) : null}
               {form.type === "APPAREL" && product ? (
                 <Button asChild variant="outline" size="sm">
-                  <Link href={`/dashboard/studio?tab=tryon&product=${product.id}`}>Show on a model</Link>
+                  <Link
+                    href={`/dashboard/studio?tab=tryon&product=${product.id}`}
+                  >
+                    Show on a model
+                  </Link>
                 </Button>
               ) : null}
             </div>
@@ -371,8 +498,18 @@ export function ProductEditor({ product, store, connected }: Props) {
           <Section
             title="Details"
             actions={
-              <Button variant="outline" size="sm" onClick={improveCopy} disabled={Boolean(aiBusy)}>
-                {aiBusy === "copy" ? <Loader2 className="animate-spin" /> : <Wand2 />} Improve with AI
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={improveCopy}
+                disabled={Boolean(aiBusy)}
+              >
+                {aiBusy === "copy" ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Wand2 />
+                )}{" "}
+                Improve with AI
               </Button>
             }
           >
@@ -380,41 +517,77 @@ export function ProductEditor({ product, store, connected }: Props) {
               {suggestion ? (
                 <div className="space-y-3 rounded-lg border border-primary/30 bg-accent/40 p-4">
                   <div className="flex items-center gap-2 text-sm font-medium">
-                    <Sparkles className="size-4 text-primary" /> Suggested listing
+                    <Sparkles className="size-4 text-primary" /> Suggested
+                    listing
                   </div>
                   <div className="text-sm font-medium">{suggestion.name}</div>
-                  <p className="whitespace-pre-line text-sm text-muted-foreground">{suggestion.description}</p>
+                  <p className="whitespace-pre-line text-sm text-muted-foreground">
+                    {suggestion.description}
+                  </p>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       onClick={() => {
-                        setForm((f) => ({ ...f, name: suggestion.name, description: suggestion.description }));
+                        setForm((f) => ({
+                          ...f,
+                          name: suggestion.name,
+                          description: suggestion.description,
+                        }));
                         setSuggestion(null);
                       }}
                     >
                       Use this
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setSuggestion(null)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSuggestion(null)}
+                    >
                       Keep mine
                     </Button>
                   </div>
                 </div>
               ) : null}
-              <Field label="Name" hint="Brand + product + size works best, e.g. “Tata Salt Iodised 1 kg”.">
-                <Input value={form.name} onChange={(e) => set("name", e.target.value)} />
+              <Field
+                label="Name"
+                hint="Brand + product + size works best, e.g. “Tata Salt Iodised 1 kg”."
+              >
+                <Input
+                  value={form.name}
+                  onChange={(e) => set("name", e.target.value)}
+                />
               </Field>
               <Field label="Description">
-                <Textarea rows={6} value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="What it is, why it's good, how to use or store it." />
+                <Textarea
+                  rows={6}
+                  value={form.description}
+                  onChange={(e) => set("description", e.target.value)}
+                  placeholder="What it is, why it's good, how to use or store it."
+                />
               </Field>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Category on ONDC & marketplaces">
-                  <OndcCategorySelect value={form.ondcCategory} onChange={(v) => set("ondcCategory", v)} />
+                  <OndcCategorySelect
+                    value={form.ondcCategory}
+                    onChange={(v) => set("ondcCategory", v)}
+                  />
                 </Field>
-                <Field label="Your shelf / group" hint="Your own grouping, e.g. “Counter 2”.">
-                  <Input value={form.category} onChange={(e) => set("category", e.target.value)} />
+                <Field
+                  label="Your shelf / group"
+                  hint="Your own grouping, e.g. “Counter 2”."
+                >
+                  <Input
+                    value={form.category}
+                    onChange={(e) => set("category", e.target.value)}
+                  />
                 </Field>
                 <Field label="Kind of product">
-                  <NativeSelect value={form.type} onChange={(e) => set("type", e.target.value as Form["type"])}>
+                  <NativeSelect
+                    value={form.type}
+                    onChange={(e) =>
+                      set("type", e.target.value as Form["type"])
+                    }
+                  >
                     <option value="PACKAGED">Packaged (barcode)</option>
                     <option value="LOOSE">Loose (by weight)</option>
                     <option value="HANDMADE">Handmade / custom</option>
@@ -422,7 +595,10 @@ export function ProductEditor({ product, store, connected }: Props) {
                   </NativeSelect>
                 </Field>
                 <Field label="Veg / non-veg" hint="Required on ONDC for food.">
-                  <NativeSelect value={form.vegType ?? ""} onChange={(e) => set("vegType", e.target.value || null)}>
+                  <NativeSelect
+                    value={form.vegType ?? ""}
+                    onChange={(e) => set("vegType", e.target.value || null)}
+                  >
                     <option value="">Not food / not set</option>
                     <option value="veg">Veg</option>
                     <option value="nonveg">Non-veg</option>
@@ -436,15 +612,43 @@ export function ProductEditor({ product, store, connected }: Props) {
           <Section title="Price & stock">
             <div className="grid gap-4 p-5 sm:grid-cols-2">
               <Field label="Selling price">
-                <MoneyInput value={form.price} onChange={(v) => set("price", v)} placeholder="0.00" />
+                <MoneyInput
+                  value={form.price}
+                  onChange={(v) => set("price", v)}
+                  placeholder="0.00"
+                />
               </Field>
-              <Field label="MRP" hint={Number(form.mrp) > Number(form.price) && Number(form.price) > 0 ? `${Math.round((1 - Number(form.price) / Number(form.mrp)) * 100)}% off shown to buyers` : "Printed maximum retail price"}>
-                <MoneyInput value={form.mrp} onChange={(v) => set("mrp", v)} placeholder="0.00" />
+              <Field
+                label="MRP"
+                hint={
+                  Number(form.mrp) > Number(form.price) &&
+                  Number(form.price) > 0
+                    ? `${Math.round((1 - Number(form.price) / Number(form.mrp)) * 100)}% off shown to buyers`
+                    : "Printed maximum retail price"
+                }
+              >
+                <MoneyInput
+                  value={form.mrp}
+                  onChange={(v) => set("mrp", v)}
+                  placeholder="0.00"
+                />
               </Field>
               <Field label="Pack size">
                 <div className="flex gap-2">
-                  <Input inputMode="decimal" value={form.unitValue} onChange={(e) => set("unitValue", e.target.value.replace(/[^\d.]/g, ""))} placeholder="1" className="w-24" />
-                  <UnitSelect value={form.unit} onChange={(v) => set("unit", v)} className="flex-1" />
+                  <Input
+                    inputMode="decimal"
+                    value={form.unitValue}
+                    onChange={(e) =>
+                      set("unitValue", e.target.value.replace(/[^\d.]/g, ""))
+                    }
+                    placeholder="1"
+                    className="w-24"
+                  />
+                  <UnitSelect
+                    value={form.unit}
+                    onChange={(v) => set("unit", v)}
+                    className="flex-1"
+                  />
                 </div>
               </Field>
               <Field label="Stock">
@@ -454,19 +658,37 @@ export function ProductEditor({ product, store, connected }: Props) {
                     value={form.trackStock ? form.stock : ""}
                     disabled={!form.trackStock}
                     placeholder={form.trackStock ? "0" : "Always available"}
-                    onChange={(e) => set("stock", e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) =>
+                      set("stock", e.target.value.replace(/\D/g, ""))
+                    }
                     className="w-28"
                   />
                   <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Switch checked={form.trackStock} onCheckedChange={(v) => set("trackStock", v)} /> Track
+                    <Switch
+                      checked={form.trackStock}
+                      onCheckedChange={(v) => set("trackStock", v)}
+                    />{" "}
+                    Track
                   </label>
                 </div>
               </Field>
               <Field label="Status" className="sm:col-span-2">
                 <div className="inline-flex rounded-lg border p-0.5 text-sm">
                   {(["ACTIVE", "DRAFT", "ARCHIVED"] as const).map((st) => (
-                    <button key={st} type="button" onClick={() => set("status", st)} className={cn("rounded-md px-3 py-1", form.status === st && "bg-muted font-medium")}>
-                      {st === "ACTIVE" ? "Active" : st === "DRAFT" ? "Draft" : "Archived"}
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => set("status", st)}
+                      className={cn(
+                        "rounded-md px-3 py-1",
+                        form.status === st && "bg-muted font-medium",
+                      )}
+                    >
+                      {st === "ACTIVE"
+                        ? "Active"
+                        : st === "DRAFT"
+                          ? "Draft"
+                          : "Archived"}
                     </button>
                   ))}
                 </div>
@@ -474,31 +696,72 @@ export function ProductEditor({ product, store, connected }: Props) {
             </div>
           </Section>
 
-          <Section title="Identifiers & compliance" description="Marketplaces use these to match and verify your product.">
+          <Section
+            title="Identifiers & compliance"
+            description="Marketplaces use these to match and verify your product."
+          >
             <div className="grid gap-4 p-5 sm:grid-cols-2">
               <Field label="Brand">
-                <Input value={form.brand} onChange={(e) => set("brand", e.target.value)} />
+                <Input
+                  value={form.brand}
+                  onChange={(e) => set("brand", e.target.value)}
+                />
               </Field>
               <Field label="Barcode (EAN / UPC)">
-                <Input value={form.barcode} inputMode="numeric" onChange={(e) => set("barcode", e.target.value.replace(/\D/g, ""))} className="font-mono" />
+                <Input
+                  value={form.barcode}
+                  inputMode="numeric"
+                  onChange={(e) =>
+                    set("barcode", e.target.value.replace(/\D/g, ""))
+                  }
+                  className="font-mono"
+                />
               </Field>
-              <Field label="SKU" hint="Your own code. Auto-generated for marketplaces if empty.">
-                <Input value={form.sku} onChange={(e) => set("sku", e.target.value)} className="font-mono" />
+              <Field
+                label="SKU"
+                hint="Your own code. Auto-generated for marketplaces if empty."
+              >
+                <Input
+                  value={form.sku}
+                  onChange={(e) => set("sku", e.target.value)}
+                  className="font-mono"
+                />
               </Field>
-              <Field label="Common or generic name" hint="Legal Metrology: e.g. “Whole wheat flour”.">
-                <Input value={form.commonName} onChange={(e) => set("commonName", e.target.value)} />
+              <Field
+                label="Common or generic name"
+                hint="Legal Metrology: e.g. “Whole wheat flour”."
+              >
+                <Input
+                  value={form.commonName}
+                  onChange={(e) => set("commonName", e.target.value)}
+                />
               </Field>
               <Field label="Manufacturer / packer">
-                <Input value={form.manufacturer} onChange={(e) => set("manufacturer", e.target.value)} />
+                <Input
+                  value={form.manufacturer}
+                  onChange={(e) => set("manufacturer", e.target.value)}
+                />
               </Field>
               <Field label="Manufacturer address">
-                <Input value={form.manufacturerAddress} onChange={(e) => set("manufacturerAddress", e.target.value)} />
+                <Input
+                  value={form.manufacturerAddress}
+                  onChange={(e) => set("manufacturerAddress", e.target.value)}
+                />
               </Field>
               <Field label="HSN code">
-                <Input value={form.hsnCode} inputMode="numeric" onChange={(e) => set("hsnCode", e.target.value.replace(/\D/g, ""))} />
+                <Input
+                  value={form.hsnCode}
+                  inputMode="numeric"
+                  onChange={(e) =>
+                    set("hsnCode", e.target.value.replace(/\D/g, ""))
+                  }
+                />
               </Field>
               <Field label="GST %">
-                <NativeSelect value={form.gstRate} onChange={(e) => set("gstRate", e.target.value)}>
+                <NativeSelect
+                  value={form.gstRate}
+                  onChange={(e) => set("gstRate", e.target.value)}
+                >
                   <option value="">Not set</option>
                   {["0", "5", "12", "18", "28"].map((r) => (
                     <option key={r} value={r}>
@@ -516,25 +779,52 @@ export function ProductEditor({ product, store, connected }: Props) {
             <div className="p-5">
               <div className="flex items-baseline justify-between">
                 <span className="text-sm font-medium">Listing score</span>
-                <span className={cn("text-2xl font-semibold tabular", band === "great" ? "text-success" : band === "weak" ? "text-destructive" : "")}>
+                <span
+                  className={cn(
+                    "text-2xl font-semibold tabular",
+                    band === "great"
+                      ? "text-success"
+                      : band === "weak"
+                        ? "text-destructive"
+                        : "",
+                  )}
+                >
                   {quality.score}
-                  <span className="text-sm font-normal text-muted-foreground">/100</span>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    /100
+                  </span>
                 </span>
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                <div className={cn("h-full rounded-full transition-all", band === "great" ? "bg-success" : band === "weak" ? "bg-destructive" : "bg-warning")} style={{ width: `${quality.score}%` }} />
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    band === "great"
+                      ? "bg-success"
+                      : band === "weak"
+                        ? "bg-destructive"
+                        : "bg-warning",
+                  )}
+                  style={{ width: `${quality.score}%` }}
+                />
               </div>
               {quality.suggestions.length ? (
                 <ul className="mt-4 space-y-2.5">
                   {quality.suggestions.slice(0, 5).map((sg) => (
                     <li key={sg.id} className="flex gap-2 text-sm">
-                      <span className="mt-0.5 shrink-0 text-xs font-semibold text-primary tabular">+{sg.points}</span>
-                      <span className="text-muted-foreground">{sg.message}</span>
+                      <span className="mt-0.5 shrink-0 text-xs font-semibold text-primary tabular">
+                        +{sg.points}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {sg.message}
+                      </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-3 text-sm text-muted-foreground">Complete listing. Buyers have everything they need.</p>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Complete listing. Buyers have everything they need.
+                </p>
               )}
             </div>
           </Section>
@@ -570,23 +860,46 @@ export function ProductEditor({ product, store, connected }: Props) {
                     <li key={prov} className="space-y-2 px-5 py-3">
                       <div className="flex items-center justify-between gap-2">
                         <div className="font-medium">{name}</div>
-                        {l ? <Pill tone={LISTING_STATUS[l.status].tone}>{LISTING_STATUS[l.status].label}</Pill> : null}
+                        {l ? (
+                          <Pill tone={LISTING_STATUS[l.status].tone}>
+                            {LISTING_STATUS[l.status].label}
+                          </Pill>
+                        ) : null}
                       </div>
-                      {l?.message ? <p className="text-xs text-muted-foreground">{l.message}</p> : null}
+                      {l?.message ? (
+                        <p className="text-xs text-muted-foreground">
+                          {l.message}
+                        </p>
+                      ) : null}
                       <div className="flex gap-2">
                         {connected[prov] ? (
-                          <Button size="sm" variant="outline" disabled={Boolean(publishing)} onClick={() => publish(prov === "SHOPIFY" ? "shopify" : "amazon")}>
-                            {publishing === prov.toLowerCase() ? <Loader2 className="animate-spin" /> : null}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={Boolean(publishing)}
+                            onClick={() =>
+                              publish(prov === "SHOPIFY" ? "shopify" : "amazon")
+                            }
+                          >
+                            {publishing === prov.toLowerCase() ? (
+                              <Loader2 className="animate-spin" />
+                            ) : null}
                             {l ? "Sync now" : "Publish"}
                           </Button>
                         ) : (
                           <Button asChild size="sm" variant="ghost">
-                            <Link href="/dashboard/channels">Connect {name}</Link>
+                            <Link href="/dashboard/channels">
+                              Connect {name}
+                            </Link>
                           </Button>
                         )}
                         {l?.externalUrl ? (
                           <Button asChild size="sm" variant="ghost">
-                            <a href={l.externalUrl} target="_blank" rel="noreferrer">
+                            <a
+                              href={l.externalUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
                               View <ExternalLink />
                             </a>
                           </Button>

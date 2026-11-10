@@ -11,7 +11,11 @@ export const GET = handler(async (req: Request) => {
   const format = url.searchParams.get("format") ?? "csv";
   const ids = url.searchParams.get("ids")?.split(",").filter(Boolean);
   const products = await db.product.findMany({
-    where: { userId, status: { not: "ARCHIVED" }, ...(ids?.length ? { id: { in: ids } } : {}) },
+    where: {
+      userId,
+      status: { not: "ARCHIVED" },
+      ...(ids?.length ? { id: { in: ids } } : {}),
+    },
     orderBy: { name: "asc" },
   });
   const date = new Date().toISOString().slice(0, 10);
@@ -19,10 +23,39 @@ export const GET = handler(async (req: Request) => {
     format === "flipkart"
       ? flipkartListingSheet(products)
       : toCsv([
-          ["name", "sku", "barcode", "brand", "type", "status", "category", "ondc_category", "price", "mrp", "stock", "unit_value", "unit", "description", "image_url"],
+          [
+            "name",
+            "sku",
+            "barcode",
+            "brand",
+            "type",
+            "status",
+            "category",
+            "ondc_category",
+            "price",
+            "mrp",
+            "stock",
+            "unit_value",
+            "unit",
+            "description",
+            "image_url",
+          ],
           ...products.map((p) => [
-            p.name, p.sku, p.barcode, p.brand, p.type, p.status, p.category, p.ondcCategory,
-            p.price?.toString(), p.mrp?.toString(), p.stock, p.unitValue?.toString(), p.unit, p.description, p.imageUrl,
+            p.name,
+            p.sku,
+            p.barcode,
+            p.brand,
+            p.type,
+            p.status,
+            p.category,
+            p.ondcCategory,
+            p.price?.toString(),
+            p.mrp?.toString(),
+            p.stock,
+            p.unitValue?.toString(),
+            p.unit,
+            p.description,
+            p.imageUrl,
           ]),
         ]);
   return new Response(`﻿${body}`, {

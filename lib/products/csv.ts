@@ -65,6 +65,7 @@ export const COLUMN_GUESSES: Record<string, RegExp> = {
 
 export function guessColumn(header: string): string | null {
   const h = header.trim();
-  for (const [field, re] of Object.entries(COLUMN_GUESSES)) if (re.test(h)) return field;
+  for (const [field, re] of Object.entries(COLUMN_GUESSES))
+    if (re.test(h)) return field;
   return null;
 }

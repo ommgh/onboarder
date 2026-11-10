@@ -1,6 +1,15 @@
 "use client";
 
-import { AlertCircle, Barcode, CheckCircle2, Keyboard, Loader2, Minus, Plus, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  Barcode,
+  CheckCircle2,
+  Keyboard,
+  Loader2,
+  Minus,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -65,8 +74,15 @@ export default function ScanPage() {
   // Restore an unfinished session.
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as Row[];
-      if (saved.length) setRows(saved.map((r) => (r.status === "loading" ? { ...r, status: "error" } : r)));
+      const saved = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) ?? "[]",
+      ) as Row[];
+      if (saved.length)
+        setRows(
+          saved.map((r) =>
+            r.status === "loading" ? { ...r, status: "error" } : r,
+          ),
+        );
     } catch {
       /* ignore */
     }
@@ -80,11 +96,15 @@ export default function ScanPage() {
   }, [rows]);
 
   const update = (barcode: string, patch: Partial<Row>) =>
-    setRows((rs) => rs.map((r) => (r.barcode === barcode ? { ...r, ...patch } : r)));
+    setRows((rs) =>
+      rs.map((r) => (r.barcode === barcode ? { ...r, ...patch } : r)),
+    );
 
   const lookup = async (barcode: string) => {
     try {
-      const res = await api<Lookup>(`/api/barcode/${encodeURIComponent(barcode)}`);
+      const res = await api<Lookup>(
+        `/api/barcode/${encodeURIComponent(barcode)}`,
+      );
       const p = res.product;
       update(res.barcode, {
         status: res.existing ? "exists" : p ? "found" : "unknown",
@@ -114,17 +134,37 @@ export default function ScanPage() {
     const existing = rowsRef.current.find((r) => r.barcode === barcode);
     if (existing) {
       update(barcode, { count: existing.count + 1 });
-      toast.success(`${existing.name || barcode}: ${existing.count + 1} in stock`, { duration: 1200 });
+      toast.success(
+        `${existing.name || barcode}: ${existing.count + 1} in stock`,
+        { duration: 1200 },
+      );
       return;
     }
     setRows((rs) => [
-      { barcode, status: "loading", name: "", brand: null, description: "", imageUrl: null, unit: null, unitValue: null, manufacturer: null, vegType: null, ondcCategory: null, price: "", mrp: "", count: 1 },
+      {
+        barcode,
+        status: "loading",
+        name: "",
+        brand: null,
+        description: "",
+        imageUrl: null,
+        unit: null,
+        unitValue: null,
+        manufacturer: null,
+        vegType: null,
+        ondcCategory: null,
+        price: "",
+        mrp: "",
+        count: 1,
+      },
       ...rs,
     ]);
     lookup(barcode);
   };
 
-  const ready = rows.filter((r) => (r.status === "found" || r.status === "unknown") && r.name.trim());
+  const ready = rows.filter(
+    (r) => (r.status === "found" || r.status === "unknown") && r.name.trim(),
+  );
   const missingPrice = ready.filter((r) => !r.price).length;
 
   const saveAll = async () => {
@@ -142,7 +182,8 @@ export default function ScanPage() {
             barcode: r.barcode,
             brand: r.brand,
             manufacturer: r.manufacturer,
-            imageUrl: r.imageUrl && /^https:/.test(r.imageUrl) ? r.imageUrl : "",
+            imageUrl:
+              r.imageUrl && /^https:/.test(r.imageUrl) ? r.imageUrl : "",
             unit: r.unit,
             unitValue: r.unitValue,
             vegType: r.vegType,
@@ -156,7 +197,10 @@ export default function ScanPage() {
       });
       setRows((rs) => rs.filter((r) => !ready.includes(r)));
       toast.success(`${created} products added to your catalog`, {
-        action: { label: "View", onClick: () => router.push("/dashboard/catalog") },
+        action: {
+          label: "View",
+          onClick: () => router.push("/dashboard/catalog"),
+        },
       });
     } catch (e) {
       toastError(e);
@@ -201,7 +245,8 @@ export default function ScanPage() {
             </Button>
           </form>
           <p className="text-xs text-muted-foreground">
-            Tip: with a USB or Bluetooth scanner, click the box above once and keep scanning. Each beep adds a row.
+            Tip: with a USB or Bluetooth scanner, click the box above once and
+            keep scanning. Each beep adds a row.
           </p>
         </div>
 
@@ -217,7 +262,10 @@ export default function ScanPage() {
               <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
                 <div className="text-sm">
                   <span className="font-medium">{rows.length} scanned</span>
-                  <span className="text-muted-foreground"> · {ready.length} ready to save</span>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    · {ready.length} ready to save
+                  </span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setRows([])}>
                   Clear list
@@ -225,15 +273,30 @@ export default function ScanPage() {
               </div>
               <ul className="divide-y">
                 {rows.map((r) => (
-                  <ScanRow key={r.barcode} row={r} onChange={(p) => update(r.barcode, p)} onRemove={() => setRows((rs) => rs.filter((x) => x !== r))} />
+                  <ScanRow
+                    key={r.barcode}
+                    row={r}
+                    onChange={(p) => update(r.barcode, p)}
+                    onRemove={() => setRows((rs) => rs.filter((x) => x !== r))}
+                  />
                 ))}
               </ul>
               <div className="sticky bottom-20 flex flex-col gap-2 border-t bg-card/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between md:bottom-0">
                 <p className="text-xs text-muted-foreground">
-                  {missingPrice ? `${missingPrice} without a price will be saved as drafts.` : "All set. Items go live on your channels right away."}
+                  {missingPrice
+                    ? `${missingPrice} without a price will be saved as drafts.`
+                    : "All set. Items go live on your channels right away."}
                 </p>
-                <Button onClick={saveAll} disabled={!ready.length || saving} size="lg">
-                  {saving ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
+                <Button
+                  onClick={saveAll}
+                  disabled={!ready.length || saving}
+                  size="lg"
+                >
+                  {saving ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <CheckCircle2 />
+                  )}
                   Save {ready.length || ""} to catalog
                 </Button>
               </div>
@@ -245,7 +308,15 @@ export default function ScanPage() {
   );
 }
 
-function ScanRow({ row: r, onChange, onRemove }: { row: Row; onChange: (p: Partial<Row>) => void; onRemove: () => void }) {
+function ScanRow({
+  row: r,
+  onChange,
+  onRemove,
+}: {
+  row: Row;
+  onChange: (p: Partial<Row>) => void;
+  onRemove: () => void;
+}) {
   return (
     <li className="space-y-3 px-4 py-3">
       <div className="flex items-start gap-3">
@@ -258,7 +329,9 @@ function ScanRow({ row: r, onChange, onRemove }: { row: Row; onChange: (p: Parti
         )}
         <div className="min-w-0 flex-1 space-y-1">
           {r.status === "loading" ? (
-            <div className="text-sm text-muted-foreground">Looking up {r.barcode}…</div>
+            <div className="text-sm text-muted-foreground">
+              Looking up {r.barcode}…
+            </div>
           ) : (
             <Input
               value={r.name}
@@ -270,11 +343,16 @@ function ScanRow({ row: r, onChange, onRemove }: { row: Row; onChange: (p: Parti
           )}
           <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             <span className="font-mono">{r.barcode}</span>
-            {r.unitValue && r.unit ? <span>· {formatQuantity(r.unitValue, r.unit)}</span> : null}
+            {r.unitValue && r.unit ? (
+              <span>· {formatQuantity(r.unitValue, r.unit)}</span>
+            ) : null}
             {r.status === "exists" ? (
               <Pill tone="info">
                 Already in catalog ·{" "}
-                <Link href={`/dashboard/catalog/${r.existingId}`} className="underline">
+                <Link
+                  href={`/dashboard/catalog/${r.existingId}`}
+                  className="underline"
+                >
                   open
                 </Link>
               </Pill>
@@ -287,26 +365,57 @@ function ScanRow({ row: r, onChange, onRemove }: { row: Row; onChange: (p: Parti
             ) : null}
           </div>
         </div>
-        <Button variant="ghost" size="icon" className="size-8 text-muted-foreground" onClick={onRemove} aria-label="Remove">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 text-muted-foreground"
+          onClick={onRemove}
+          aria-label="Remove"
+        >
           <Trash2 />
         </Button>
       </div>
       {r.status === "found" || r.status === "unknown" ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1fr_auto_minmax(0,1.6fr)]">
-          <MoneyInput value={r.price} onChange={(price) => onChange({ price })} placeholder="Price" aria-label="Selling price" />
-          <MoneyInput value={r.mrp} onChange={(mrp) => onChange({ mrp })} placeholder="MRP" aria-label="MRP" />
+          <MoneyInput
+            value={r.price}
+            onChange={(price) => onChange({ price })}
+            placeholder="Price"
+            aria-label="Selling price"
+          />
+          <MoneyInput
+            value={r.mrp}
+            onChange={(mrp) => onChange({ mrp })}
+            placeholder="MRP"
+            aria-label="MRP"
+          />
           <div className="flex h-9 items-center rounded-md border">
-            <button type="button" className="grid h-full w-8 place-items-center text-muted-foreground hover:text-foreground" onClick={() => onChange({ count: Math.max(0, r.count - 1) })} aria-label="Decrease stock">
+            <button
+              type="button"
+              className="grid h-full w-8 place-items-center text-muted-foreground hover:text-foreground"
+              onClick={() => onChange({ count: Math.max(0, r.count - 1) })}
+              aria-label="Decrease stock"
+            >
               <Minus className="size-3.5" />
             </button>
-            <span className="min-w-8 text-center text-sm tabular" aria-label="Stock">
+            <span className="min-w-8 text-center text-sm tabular">
+              <span className="sr-only">Stock: </span>
               {r.count}
             </span>
-            <button type="button" className="grid h-full w-8 place-items-center text-muted-foreground hover:text-foreground" onClick={() => onChange({ count: r.count + 1 })} aria-label="Increase stock">
+            <button
+              type="button"
+              className="grid h-full w-8 place-items-center text-muted-foreground hover:text-foreground"
+              onClick={() => onChange({ count: r.count + 1 })}
+              aria-label="Increase stock"
+            >
               <Plus className="size-3.5" />
             </button>
           </div>
-          <OndcCategorySelect value={r.ondcCategory} onChange={(ondcCategory) => onChange({ ondcCategory })} placeholder="Category" />
+          <OndcCategorySelect
+            value={r.ondcCategory}
+            onChange={(ondcCategory) => onChange({ ondcCategory })}
+            placeholder="Category"
+          />
         </div>
       ) : null}
     </li>

@@ -8,14 +8,19 @@ import { HttpError, requireUserId } from "@/lib/server/session";
 type Ctx = { params: Promise<{ id: string }> };
 
 async function owned(userId: string, id: string) {
-  const product = await db.product.findFirst({ where: { id, userId }, include: { listings: true } });
+  const product = await db.product.findFirst({
+    where: { id, userId },
+    include: { listings: true },
+  });
   if (!product) throw new HttpError(404, "Product not found.");
   return product;
 }
 
 export const GET = handler(async (_req: Request, ctx: Ctx) => {
   const userId = await requireUserId();
-  return ok({ product: toProductDTO(await owned(userId, (await ctx.params).id)) });
+  return ok({
+    product: toProductDTO(await owned(userId, (await ctx.params).id)),
+  });
 });
 
 export const PATCH = handler(async (req: Request, ctx: Ctx) => {
@@ -27,12 +32,21 @@ export const PATCH = handler(async (req: Request, ctx: Ctx) => {
   const { attributes, ...rest } = patch;
   const product = await db.product.update({
     where: { id },
-    data: { ...rest, ...(attributes !== undefined ? { attributes: attributes ?? undefined } : {}) } as never,
+    data: {
+      ...rest,
+      ...(attributes !== undefined
+        ? { attributes: attributes ?? undefined }
+        : {}),
+    } as never,
     include: { listings: true },
   });
   // Edits invalidate pushed listings so the seller knows to re-sync.
   await db.channelListing.updateMany({
-    where: { productId: id, provider: { in: ["SHOPIFY", "AMAZON"] }, status: "LIVE" },
+    where: {
+      productId: id,
+      provider: { in: ["SHOPIFY", "AMAZON"] },
+      status: "LIVE",
+    },
     data: { status: "PENDING", message: "Edited since last sync" },
   });
   return ok({ product: toProductDTO(product) });

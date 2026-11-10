@@ -9,13 +9,19 @@ export const metadata: Metadata = { title: "Catalog" };
 export default async function CatalogPage() {
   const user = await getUserOrRedirect();
   const [connections, { limits }] = await Promise.all([
-    db.marketplaceConnection.findMany({ where: { userId: user.id }, select: { provider: true } }),
+    db.marketplaceConnection.findMany({
+      where: { userId: user.id },
+      select: { provider: true },
+    }),
     getPlan(user.id),
   ]);
   const has = (p: string) => connections.some((c) => c.provider === p);
   return (
     <Suspense>
-      <CatalogView connected={{ SHOPIFY: has("SHOPIFY"), AMAZON: has("AMAZON") }} limit={limits.products} />
+      <CatalogView
+        connected={{ SHOPIFY: has("SHOPIFY"), AMAZON: has("AMAZON") }}
+        limit={limits.products}
+      />
     </Suspense>
   );
 }

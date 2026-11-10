@@ -1,7 +1,9 @@
 import "server-only";
 import { ONDC_DOMAINS } from "@/lib/ondc/taxonomy";
 
-const CATEGORY_LIST = ONDC_DOMAINS.map((d) => `${d.label}: ${d.categories.join(", ")}`).join("\n");
+const CATEGORY_LIST = ONDC_DOMAINS.map(
+  (d) => `${d.label}: ${d.categories.join(", ")}`,
+).join("\n");
 
 export const DETECT_PROMPT = `You are cataloguing a product for a small Indian shop that is going online.
 Look at the photo and return ONLY a JSON object:

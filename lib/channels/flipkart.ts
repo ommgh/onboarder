@@ -6,9 +6,21 @@ import { formatQuantity } from "@/lib/products/units";
 // carries the fields common to every template so sellers can paste columns across.
 export function flipkartListingSheet(products: Product[]): string {
   const header = [
-    "Seller SKU ID", "Product Title", "Brand", "MRP (INR)", "Your selling price (INR)", "Stock",
-    "Pack size", "EAN / UPC", "HSN", "GST %", "Description", "Main Image URL", "Other Image URLs",
-    "Country of Origin", "Manufacturer Details",
+    "Seller SKU ID",
+    "Product Title",
+    "Brand",
+    "MRP (INR)",
+    "Your selling price (INR)",
+    "Stock",
+    "Pack size",
+    "EAN / UPC",
+    "HSN",
+    "GST %",
+    "Description",
+    "Main Image URL",
+    "Other Image URLs",
+    "Country of Origin",
+    "Manufacturer Details",
   ];
   const rows = products.map((p) => [
     p.sku || `OB-${p.id.slice(-10).toUpperCase()}`,

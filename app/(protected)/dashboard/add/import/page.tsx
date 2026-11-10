@@ -39,14 +39,19 @@ export default function ImportPage() {
   const [fileName, setFileName] = useState("");
   const [rows, setRows] = useState<string[][]>([]);
   const [mapping, setMapping] = useState<Record<string, number | null>>({});
-  const [progress, setProgress] = useState<null | { done: number; total: number }>(null);
+  const [progress, setProgress] = useState<null | {
+    done: number;
+    total: number;
+  }>(null);
 
   const header = rows[0] ?? [];
   const body = rows.slice(1);
 
   const onFile = async (file: File) => {
     if (/\.xlsx?$/i.test(file.name)) {
-      toast.error("Excel files need to be saved as CSV first: File → Save As → CSV.");
+      toast.error(
+        "Excel files need to be saved as CSV first: File → Save As → CSV.",
+      );
       return;
     }
     const parsed = parseCsv(await file.text());
@@ -65,19 +70,28 @@ export default function ImportPage() {
   };
 
   const products = useMemo(() => {
-    const col = (r: string[], k: string) => (mapping[k] !== undefined && mapping[k] !== null ? r[mapping[k] as number]?.trim() : undefined);
+    const col = (r: string[], k: string) =>
+      mapping[k] !== undefined && mapping[k] !== null
+        ? r[mapping[k] as number]?.trim()
+        : undefined;
     return body
-      .map((r) => {
+      .map((r, rowIndex) => {
         const name = col(r, "name");
         if (!name) return null;
         const qty = parseQuantity(col(r, "unit")) ?? parseQuantity(name);
         const barcode = col(r, "barcode")?.replace(/\D/g, "") || null;
         const price = money(col(r, "price"));
         const stockRaw = col(r, "stock");
-        const stock = stockRaw ? Math.max(0, Math.trunc(Number(stockRaw.replace(/[^\d.-]/g, "")) || 0)) : null;
+        const stock = stockRaw
+          ? Math.max(
+              0,
+              Math.trunc(Number(stockRaw.replace(/[^\d.-]/g, "")) || 0),
+            )
+          : null;
         const category = col(r, "category") || "General";
         const image = col(r, "imageUrl");
         return {
+          rowId: `row-${rowIndex + 2}`,
           name: name.slice(0, 200),
           price,
           mrp: money(col(r, "mrp")) ?? price,
@@ -105,7 +119,14 @@ export default function ImportPage() {
     let created = 0;
     try {
       for (let i = 0; i < products.length; i += BATCH) {
-        const r = await api<{ created: number }>("/api/products/bulk", { method: "POST", json: { products: products.slice(i, i + BATCH) } });
+        const r = await api<{ created: number }>("/api/products/bulk", {
+          method: "POST",
+          json: {
+            products: products
+              .slice(i, i + BATCH)
+              .map(({ rowId: _rowId, ...p }) => p),
+          },
+        });
         created += r.created;
         setProgress({ done: created, total: products.length });
       }
@@ -113,15 +134,34 @@ export default function ImportPage() {
       router.push("/dashboard/catalog");
     } catch (e) {
       toastError(e);
-      if (created) toast.message(`${created} products were imported before the error.`);
+      if (created)
+        toast.message(`${created} products were imported before the error.`);
       setProgress(null);
     }
   };
 
   const template = () => {
     const csv = toCsv([
-      ["Item Name", "Barcode", "MRP", "Selling Price", "Stock", "Pack Size", "Brand", "Category"],
-      ["Aashirvaad Whole Wheat Atta", "8901725121203", "310", "289", "12", "5 kg", "Aashirvaad", "Atta"],
+      [
+        "Item Name",
+        "Barcode",
+        "MRP",
+        "Selling Price",
+        "Stock",
+        "Pack Size",
+        "Brand",
+        "Category",
+      ],
+      [
+        "Aashirvaad Whole Wheat Atta",
+        "8901725121203",
+        "310",
+        "289",
+        "12",
+        "5 kg",
+        "Aashirvaad",
+        "Atta",
+      ],
       ["Tata Salt", "8904043901015", "28", "28", "40", "1 kg", "Tata", "Salt"],
     ]);
     const a = document.createElement("a");
@@ -150,9 +190,15 @@ export default function ImportPage() {
           </span>
           <span className="font-medium">Choose a CSV file</span>
           <span className="max-w-sm text-sm text-muted-foreground">
-            The first row should be column names. We'll match them to product fields automatically.
+            The first row should be column names. We'll match them to product
+            fields automatically.
           </span>
-          <input type="file" accept=".csv,text/csv,.txt,.xls,.xlsx" className="sr-only" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
+          <input
+            type="file"
+            accept=".csv,text/csv,.txt,.xls,.xlsx"
+            className="sr-only"
+            onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
+          />
         </label>
       ) : (
         <div className="space-y-6">
@@ -170,14 +216,23 @@ export default function ImportPage() {
                 <div key={f.key} className="space-y-1">
                   <div className="text-sm font-medium">
                     {f.label}
-                    {f.required ? <span className="text-primary"> *</span> : null}
+                    {f.required ? (
+                      <span className="text-primary"> *</span>
+                    ) : null}
                   </div>
                   <NativeSelect
                     value={mapping[f.key] ?? ""}
-                    onChange={(e) => setMapping((m) => ({ ...m, [f.key]: e.target.value === "" ? null : Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setMapping((m) => ({
+                        ...m,
+                        [f.key]:
+                          e.target.value === "" ? null : Number(e.target.value),
+                      }))
+                    }
                   >
                     <option value="">Don't import</option>
                     {header.map((h, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: spreadsheet columns can share names; position is the identity
                       <option key={`${h}-${i}`} value={i}>
                         {h || `Column ${i + 1}`}
                       </option>
@@ -188,28 +243,48 @@ export default function ImportPage() {
             </div>
           </Section>
 
-          <Section title="Preview" description={`${products.length} products will be imported${products.some((p) => !p.price) ? "; rows without a price are saved as drafts" : ""}.`}>
+          <Section
+            title="Preview"
+            description={`${products.length} products will be imported${products.some((p) => !p.price) ? "; rows without a price are saved as drafts" : ""}.`}
+          >
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                   <tr>
-                    {["Name", "Price", "MRP", "Stock", "Size", "Barcode", "Category"].map((h) => (
-                      <th key={h} className="px-4 py-2 font-medium whitespace-nowrap">
+                    {[
+                      "Name",
+                      "Price",
+                      "MRP",
+                      "Stock",
+                      "Size",
+                      "Barcode",
+                      "Category",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-2 font-medium whitespace-nowrap"
+                      >
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {products.slice(0, 8).map((p, i) => (
-                    <tr key={`${p.name}-${i}`}>
+                  {products.slice(0, 8).map((p) => (
+                    <tr key={p.rowId}>
                       <td className="max-w-64 truncate px-4 py-2">{p.name}</td>
                       <td className="px-4 py-2 tabular">{p.price ?? "—"}</td>
                       <td className="px-4 py-2 tabular">{p.mrp ?? "—"}</td>
                       <td className="px-4 py-2 tabular">{p.stock ?? "—"}</td>
-                      <td className="px-4 py-2">{p.unitValue ? `${p.unitValue} ${p.unit}` : "—"}</td>
-                      <td className="px-4 py-2 font-mono text-xs">{p.barcode ?? "—"}</td>
-                      <td className="px-4 py-2 text-muted-foreground">{p.ondcCategory ?? p.category}</td>
+                      <td className="px-4 py-2">
+                        {p.unitValue ? `${p.unitValue} ${p.unit}` : "—"}
+                      </td>
+                      <td className="px-4 py-2 font-mono text-xs">
+                        {p.barcode ?? "—"}
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        {p.ondcCategory ?? p.category}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -218,10 +293,17 @@ export default function ImportPage() {
           </Section>
 
           <div className="flex justify-end">
-            <Button size="lg" disabled={!products.length || mapping.name == null || Boolean(progress)} onClick={run}>
+            <Button
+              size="lg"
+              disabled={
+                !products.length || mapping.name == null || Boolean(progress)
+              }
+              onClick={run}
+            >
               {progress ? (
                 <>
-                  <Loader2 className="animate-spin" /> Importing {progress.done}/{progress.total}
+                  <Loader2 className="animate-spin" /> Importing {progress.done}
+                  /{progress.total}
                 </>
               ) : (
                 <>Import {products.length} products</>

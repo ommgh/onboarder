@@ -18,7 +18,12 @@ export function encrypt(plaintext: string): string {
   const cipher = crypto.createCipheriv("aes-256-gcm", key(), iv);
   const ct = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
-  return ["v1", iv.toString("base64"), tag.toString("base64"), ct.toString("base64")].join(".");
+  return [
+    "v1",
+    iv.toString("base64"),
+    tag.toString("base64"),
+    ct.toString("base64"),
+  ].join(".");
 }
 
 export function decrypt(payload: string): string {
@@ -26,7 +31,11 @@ export function decrypt(payload: string): string {
   if (version !== "v1" || !iv || !tag || !ct) {
     throw new Error("Unrecognised encrypted payload");
   }
-  const decipher = crypto.createDecipheriv("aes-256-gcm", key(), Buffer.from(iv, "base64"));
+  const decipher = crypto.createDecipheriv(
+    "aes-256-gcm",
+    key(),
+    Buffer.from(iv, "base64"),
+  );
   decipher.setAuthTag(Buffer.from(tag, "base64"));
   return Buffer.concat([
     decipher.update(Buffer.from(ct, "base64")),

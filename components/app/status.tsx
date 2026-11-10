@@ -11,9 +11,25 @@ const TONES: Record<Tone, string> = {
   primary: "bg-primary/12 text-primary",
 };
 
-export function Pill({ tone = "neutral", children, className, dot }: { tone?: Tone; children: React.ReactNode; className?: string; dot?: boolean }) {
+export function Pill({
+  tone = "neutral",
+  children,
+  className,
+  dot,
+}: {
+  tone?: Tone;
+  children: React.ReactNode;
+  className?: string;
+  dot?: boolean;
+}) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium", TONES[tone], className)}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium",
+        TONES[tone],
+        className,
+      )}
+    >
       {dot ? <span className="size-1.5 rounded-full bg-current" /> : null}
       {children}
     </span>

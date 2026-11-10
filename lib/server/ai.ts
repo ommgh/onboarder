@@ -6,14 +6,21 @@ import { HttpError } from "./session";
 
 // One client per purpose so keys can be split for quota/billing, falling back to a single key.
 const clients = new Map<string, GoogleGenAI>();
-export function gemini(purpose: "detection" | "generation" | "model" = "generation") {
+export function gemini(
+  purpose: "detection" | "generation" | "model" = "generation",
+) {
   const envName = {
     detection: "GEMINI_DETECTION_API_KEY",
     generation: "GEMINI_GENERATION_API_KEY",
     model: "GEMINI_MODEL_API_KEY",
   }[purpose];
   const apiKey = process.env[envName] ?? process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new HttpError(503, "AI is not configured on this server.", "AI_UNCONFIGURED");
+  if (!apiKey)
+    throw new HttpError(
+      503,
+      "AI is not configured on this server.",
+      "AI_UNCONFIGURED",
+    );
   let client = clients.get(apiKey);
   if (!client) {
     client = new GoogleGenAI({ apiKey });
@@ -22,8 +29,10 @@ export function gemini(purpose: "detection" | "generation" | "model" = "generati
   return client;
 }
 
-export const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL ?? "gemini-3.1-flash-lite";
-export const IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL ?? "gemini-3.1-flash-image-preview";
+export const TEXT_MODEL =
+  process.env.GEMINI_TEXT_MODEL ?? "gemini-3.1-flash-lite";
+export const IMAGE_MODEL =
+  process.env.GEMINI_IMAGE_MODEL ?? "gemini-3.1-flash-image-preview";
 
 /**
  * Reserve `cost` AI credits for a user, resetting the rolling 30-day window when it has
@@ -60,24 +69,43 @@ export async function refundAiCredits(userId: string, cost = 1) {
 
 /** Extracts and parses the first JSON object from a model text response. */
 export function parseModelJson<T>(text: string | undefined | null): T {
-  if (!text) throw new HttpError(502, "The AI returned an empty response. Please try again.");
-  const cleaned = text.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
+  if (!text)
+    throw new HttpError(
+      502,
+      "The AI returned an empty response. Please try again.",
+    );
+  const cleaned = text
+    .replace(/```json\s*/gi, "")
+    .replace(/```/g, "")
+    .trim();
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
   try {
-    return JSON.parse(start >= 0 ? cleaned.slice(start, end + 1) : cleaned) as T;
+    return JSON.parse(
+      start >= 0 ? cleaned.slice(start, end + 1) : cleaned,
+    ) as T;
   } catch {
-    throw new HttpError(502, "The AI response could not be read. Please try again.");
+    throw new HttpError(
+      502,
+      "The AI response could not be read. Please try again.",
+    );
   }
 }
 
 export function firstImage(response: {
-  candidates?: { content?: { parts?: { inlineData?: { data?: string; mimeType?: string } }[] } }[];
+  candidates?: {
+    content?: {
+      parts?: { inlineData?: { data?: string; mimeType?: string } }[];
+    };
+  }[];
 }): { data: string; mimeType: string } {
   for (const c of response.candidates ?? []) {
     for (const p of c.content?.parts ?? []) {
       if (p.inlineData?.data) {
-        return { data: p.inlineData.data, mimeType: p.inlineData.mimeType ?? "image/png" };
+        return {
+          data: p.inlineData.data,
+          mimeType: p.inlineData.mimeType ?? "image/png",
+        };
       }
     }
   }

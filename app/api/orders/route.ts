@@ -14,7 +14,12 @@ const input = z.object({
   deliveryFee: z.number().min(0).default(0),
   notes: z.string().max(500).optional(),
   items: z
-    .array(z.object({ productId: z.string(), quantity: z.number().int().min(1).max(10000) }))
+    .array(
+      z.object({
+        productId: z.string(),
+        quantity: z.number().int().min(1).max(10000),
+      }),
+    )
     .min(1, "Add at least one item"),
 });
 
@@ -27,15 +32,25 @@ export const POST = handler(async (req: Request) => {
   const byId = new Map(products.map((p) => [p.id, p]));
   const lines = body.items.map((i) => {
     const p = byId.get(i.productId);
-    if (!p) throw new HttpError(400, "One of the items is no longer in your catalog.");
-    if (p.price === null) throw new HttpError(400, `Set a price for “${p.name}” first.`);
-    if (p.stock !== null && p.stock < i.quantity) throw new HttpError(409, `Only ${p.stock} of “${p.name}” in stock.`);
+    if (!p)
+      throw new HttpError(
+        400,
+        "One of the items is no longer in your catalog.",
+      );
+    if (p.price === null)
+      throw new HttpError(400, `Set a price for “${p.name}” first.`);
+    if (p.stock !== null && p.stock < i.quantity)
+      throw new HttpError(409, `Only ${p.stock} of “${p.name}” in stock.`);
     return { p, quantity: i.quantity, price: Number(p.price) };
   });
   const subtotal = lines.reduce((s, l) => s + l.price * l.quantity, 0);
   const order = await db.$transaction(async (tx) => {
     for (const l of lines) {
-      if (l.p.stock !== null) await tx.product.update({ where: { id: l.p.id }, data: { stock: { decrement: l.quantity } } });
+      if (l.p.stock !== null)
+        await tx.product.update({
+          where: { id: l.p.id },
+          data: { stock: { decrement: l.quantity } },
+        });
     }
     return tx.order.create({
       data: {
@@ -53,10 +68,19 @@ export const POST = handler(async (req: Request) => {
         deliveryFee: body.deliveryFee,
         total: subtotal + body.deliveryFee,
         items: {
-          create: lines.map((l) => ({ productId: l.p.id, name: l.p.name, sku: l.p.sku, quantity: l.quantity, price: l.price })),
+          create: lines.map((l) => ({
+            productId: l.p.id,
+            name: l.p.name,
+            sku: l.p.sku,
+            quantity: l.quantity,
+            price: l.price,
+          })),
         },
       },
     });
   });
-  return ok({ order: { id: order.id, orderNumber: order.orderNumber } }, { status: 201 });
+  return ok(
+    { order: { id: order.id, orderNumber: order.orderNumber } },
+    { status: 201 },
+  );
 });

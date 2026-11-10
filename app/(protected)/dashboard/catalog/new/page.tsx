@@ -9,7 +9,10 @@ export default async function NewProductPage() {
   const store = await ensureStore(user.id);
   return (
     <ProductEditor
-      store={{ fssaiLicense: store.fssaiLicense, ondcEnabled: store.ondcEnabled }}
+      store={{
+        fssaiLicense: store.fssaiLicense,
+        ondcEnabled: store.ondcEnabled,
+      }}
       connected={{ SHOPIFY: false, AMAZON: false }}
     />
   );

@@ -19,7 +19,11 @@ const ENDED = new Set(["cancelled", "expired", "failed", "on_hold"]);
 
 export async function POST(request: Request) {
   const secret = process.env.DODO_PAYMENTS_WEBHOOK_SECRET;
-  if (!secret) return NextResponse.json({ error: "Webhook secret is not configured" }, { status: 500 });
+  if (!secret)
+    return NextResponse.json(
+      { error: "Webhook secret is not configured" },
+      { status: 500 },
+    );
 
   const rawBody = await request.text();
   try {
@@ -29,18 +33,25 @@ export async function POST(request: Request) {
       "webhook-signature": request.headers.get("webhook-signature") ?? "",
     });
   } catch {
-    return NextResponse.json({ error: "Invalid webhook signature" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Invalid webhook signature" },
+      { status: 401 },
+    );
   }
 
   const payload = JSON.parse(rawBody) as SubscriptionPayload;
-  if (!payload.type?.startsWith("subscription.")) return NextResponse.json({ received: true });
+  if (!payload.type?.startsWith("subscription."))
+    return NextResponse.json({ received: true });
   const { data } = payload;
   const email = data.customer?.email;
   const user = email ? await db.user.findUnique({ where: { email } }) : null;
-  if (!user) return NextResponse.json({ received: true, note: "unknown customer" });
+  if (!user)
+    return NextResponse.json({ received: true, note: "unknown customer" });
 
   const paidPlan = data.product_id ? planForProduct(data.product_id) : null;
-  const ended = ENDED.has((data.status ?? "").toLowerCase()) || payload.type === "subscription.cancelled";
+  const ended =
+    ENDED.has((data.status ?? "").toLowerCase()) ||
+    payload.type === "subscription.cancelled";
   const plan = ended || !paidPlan ? "FREE" : paidPlan;
   const limits = PLAN_LIMITS[plan];
 

@@ -31,7 +31,10 @@ test("digest matches the ONDC reference vector", () => {
 });
 
 test("signature matches the ONDC reference vector byte for byte", () => {
-  assert.equal(signMessage(signingString(BODY, CREATED, EXPIRES), PRIV), EXPECTED_SIG);
+  assert.equal(
+    signMessage(signingString(BODY, CREATED, EXPIRES), PRIV),
+    EXPECTED_SIG,
+  );
 });
 
 test("authorization header round-trips through parse + verify", () => {
@@ -64,7 +67,9 @@ test("generated keys sign/verify and complete the on_subscribe challenge", () =>
       privateKey: ours.signingPrivateKey,
     }),
   );
-  assert.ok(header && verifyAuthorizationHeader("{}", header, ours.signingPublicKey));
+  assert.ok(
+    header && verifyAuthorizationHeader("{}", header, ours.signingPublicKey),
+  );
 
   const challenge = encryptChallenge(
     "challenge-1234",
@@ -72,7 +77,11 @@ test("generated keys sign/verify and complete the on_subscribe challenge", () =>
     ours.encryptionPublicKey,
   );
   assert.equal(
-    decryptChallenge(challenge, ours.encryptionPrivateKey, registry.encryptionPublicKey),
+    decryptChallenge(
+      challenge,
+      ours.encryptionPrivateKey,
+      registry.encryptionPublicKey,
+    ),
     "challenge-1234",
   );
 });
@@ -80,6 +89,15 @@ test("generated keys sign/verify and complete the on_subscribe challenge", () =>
 test("accepts the published ONDC registry public key format", () => {
   const ours = generateKeySet();
   // Pre-prod registry key from the onboarding guide; only checks it parses as X25519 SPKI.
-  const preprod = "MCowBQYDK2VuAyEARa/WcMCzNQp4DWjvTI4DK7vHL6EdaHqN4GjFIu9wxxM=";
-  assert.throws(() => decryptChallenge("AAAAAAAAAAAAAAAAAAAAAA==", ours.encryptionPrivateKey, preprod), /bad decrypt|wrong final block/i);
+  const preprod =
+    "MCowBQYDK2VuAyEARa/WcMCzNQp4DWjvTI4DK7vHL6EdaHqN4GjFIu9wxxM=";
+  assert.throws(
+    () =>
+      decryptChallenge(
+        "AAAAAAAAAAAAAAAAAAAAAA==",
+        ours.encryptionPrivateKey,
+        preprod,
+      ),
+    /bad decrypt|wrong final block/i,
+  );
 });
