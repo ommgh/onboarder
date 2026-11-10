@@ -1,11 +1,6 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
-import {
-  Geist,
-  Geist_Mono,
-  Instrument_Serif,
-  Noto_Sans_Devanagari,
-} from "next/font/google";
+import { Geist_Mono, Montserrat, Noto_Sans_Devanagari } from "next/font/google";
 import Script from "next/script";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
@@ -14,16 +9,13 @@ import { Toaster } from "@/components/ui/sonner";
 import { appUrl } from "@/lib/config";
 import "@/styles/globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat",
+});
 const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
-});
-const instrument = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  variable: "--font-instrument",
 });
 const devanagari = Noto_Sans_Devanagari({
   subsets: ["devanagari"],
@@ -81,8 +73,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf7f2" },
-    { media: "(prefers-color-scheme: dark)", color: "#191613" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f5ee" },
+    { media: "(prefers-color-scheme: dark)", color: "#121812" },
   ],
 };
 
@@ -95,7 +87,7 @@ export default async function RootLayout({
   return (
     <html lang="en-IN" suppressHydrationWarning>
       <body
-        className={`${geist.variable} ${geistMono.variable} ${instrument.variable} ${devanagari.variable} font-sans`}
+        className={`${montserrat.variable} ${geistMono.variable} ${devanagari.variable} font-sans`}
       >
         <SessionProvider session={session}>
           <ThemeProvider

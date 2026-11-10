@@ -48,7 +48,7 @@ const PLANS = [
 
 export function PricingCards() {
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid items-center gap-4 lg:grid-cols-3">
       {PLANS.map((p) => {
         const l = PLAN_LIMITS[p.id];
         const price = PLAN_PRICES[p.id];
@@ -57,23 +57,26 @@ export function PricingCards() {
             key={p.id}
             className={cn(
               "relative flex flex-col rounded-2xl border bg-card p-6",
-              p.featured && "border-primary shadow-xl shadow-primary/10",
+              p.featured &&
+                "border-primary/50 shadow-soft ring-4 ring-primary/5 lg:py-9",
             )}
           >
             {p.featured ? (
-              <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
+              <span className="absolute top-6 right-6 rounded-full border border-sage/60 bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
                 Most popular
               </span>
             ) : null}
             <div className="text-lg font-semibold">{l.label}</div>
             <p className="mt-1 text-sm text-muted-foreground">{p.blurb}</p>
             <div className="mt-6 flex items-baseline gap-1.5">
-              <span className="font-serif text-5xl">{price.amount}</span>
+              <span className="text-4xl font-semibold tabular">
+                {price.amount}
+              </span>
               <span className="text-sm text-muted-foreground">
                 {price.period}
               </span>
             </div>
-            <ul className="mt-6 space-y-2.5 text-sm">
+            <ul className="mt-6 space-y-2.5 border-t pt-6 text-sm">
               {[
                 `${n(l.products)} products`,
                 `${n(l.aiCredits)} AI credits a month`,
@@ -82,7 +85,7 @@ export function PricingCards() {
                 ...p.extras,
               ].map((f) => (
                 <li key={f} className="flex gap-2">
-                  <Check className="mt-0.5 size-4 shrink-0 text-success" />
+                  <Check className="mt-0.5 size-4 shrink-0 text-primary" />
                   {f}
                 </li>
               ))}
@@ -90,7 +93,7 @@ export function PricingCards() {
             <Button
               asChild
               size="lg"
-              variant={p.featured ? "default" : "outline"}
+              variant={p.featured ? "glow" : "secondary"}
               className="mt-8"
             >
               <Link href={p.href}>{p.cta}</Link>

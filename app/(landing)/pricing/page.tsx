@@ -12,9 +12,7 @@ export default function PricingPage() {
   return (
     <div className="container py-20">
       <div className="mx-auto max-w-2xl text-center">
-        <h1 className="font-serif text-5xl tracking-tight sm:text-6xl">
-          Pricing
-        </h1>
+        <h1 className="text-4xl font-semibold sm:text-5xl">Pricing</h1>
         <p className="mt-4 text-lg text-muted-foreground">
           A flat plan, never a cut of your sales. ONDC and your WhatsApp
           storefront are included on every plan.

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "About" };
 export default function AboutPage() {
   return (
     <div className="container max-w-3xl py-20">
-      <h1 className="font-serif text-5xl leading-tight tracking-tight text-balance sm:text-6xl">
+      <h1 className="text-4xl leading-[1.1] font-semibold text-balance sm:text-5xl">
         Built for the shop at the end of your street.
       </h1>
       <div className="mt-10 space-y-6 text-lg leading-relaxed text-muted-foreground">

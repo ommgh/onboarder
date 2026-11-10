@@ -157,7 +157,7 @@ export function Storefront({
               )}
             </div>
             <div className="min-w-0">
-              <h1 className="font-serif text-3xl leading-tight sm:text-4xl">
+              <h1 className="text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
                 {store.name}
               </h1>
               {store.tagline ? (

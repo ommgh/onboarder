@@ -13,7 +13,9 @@
       "!.next",
       "!dist",
       "!build",
-      "!**/*.mdx"
+      "!**/*.mdx",
+      "!components/charts",
+      "!components/shimmering-text.tsx"
     ]
   },
   "formatter": {

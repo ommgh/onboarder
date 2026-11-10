@@ -31,7 +31,7 @@ const COLS = [
 
 export function Footer() {
   return (
-    <footer className="border-t bg-card">
+    <footer className="border-t bg-background">
       <div className="container grid gap-10 py-14 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div className="max-w-xs">
           <Logo />
@@ -42,13 +42,13 @@ export function Footer() {
         </div>
         {COLS.map((c) => (
           <div key={c.title}>
-            <div className="text-sm font-medium">{c.title}</div>
-            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+            <div className="text-sm font-semibold">{c.title}</div>
+            <ul className="mt-4 space-y-2.5 text-sm text-muted-foreground">
               {c.links.map(([label, href]) => (
                 <li key={href}>
                   <Link
                     href={href}
-                    className="hover:text-foreground"
+                    className="transition-colors hover:text-primary"
                     {...(href.startsWith("http")
                       ? { target: "_blank", rel: "noreferrer" }
                       : {})}

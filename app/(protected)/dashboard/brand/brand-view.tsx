@@ -196,7 +196,7 @@ export function BrandView({
                   />
                 ) : null}
                 <div>
-                  <div className="font-serif text-3xl">
+                  <div className="text-3xl font-semibold tracking-tight">
                     {brief.businessName || store.name}
                   </div>
                   <div className="mt-1 text-sm opacity-80">{kit.tagline}</div>

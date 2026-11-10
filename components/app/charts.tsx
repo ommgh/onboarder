@@ -1,18 +1,16 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { inr, inrCompact } from "@/lib/format";
+import { Area } from "@/components/charts/area";
+import { AreaChart } from "@/components/charts/area-chart";
+import { Bar } from "@/components/charts/bar";
+import { BarChart } from "@/components/charts/bar-chart";
+import { BarXAxis } from "@/components/charts/bar-x-axis";
+import { Grid } from "@/components/charts/grid";
+import { ChartTooltip } from "@/components/charts/tooltip";
+import { XAxis } from "@/components/charts/x-axis";
+import { inr } from "@/lib/format";
 
-const revenueConfig = {
-  revenue: { label: "Sales", color: "var(--chart-1)" },
-} satisfies ChartConfig;
-
+/** Daily sales as a soft area, with orders alongside in the tooltip. */
 export function SalesChart({
   data,
   height = 220,
@@ -21,97 +19,76 @@ export function SalesChart({
   height?: number;
 }) {
   const rows = data.map((d) => ({
-    ...d,
-    label: new Date(`${d.date}T00:00:00`).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-    }),
+    date: new Date(`${d.date}T00:00:00`),
+    revenue: d.revenue,
+    orders: d.orders,
   }));
   return (
-    <ChartContainer
-      config={revenueConfig}
+    <AreaChart
+      data={rows}
+      aspectRatio="auto"
       className="w-full"
       style={{ height }}
+      margin={{ top: 16, right: 12, bottom: 28, left: 12 }}
     >
-      <BarChart data={rows} margin={{ left: 4, right: 4, top: 8 }}>
-        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-        <XAxis
-          dataKey="label"
-          tickLine={false}
-          axisLine={false}
-          tickMargin={8}
-          minTickGap={24}
-          fontSize={11}
-        />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          width={52}
-          fontSize={11}
-          tickFormatter={(v: number) => inrCompact(v)}
-        />
-        <ChartTooltip
-          cursor={{ fill: "var(--muted)" }}
-          content={
-            <ChartTooltipContent
-              labelKey="label"
-              formatter={(value, _n, item) => (
-                <div className="flex w-full justify-between gap-4">
-                  <span className="text-muted-foreground">
-                    {item.payload.orders} orders
-                  </span>
-                  <span className="font-medium tabular">
-                    {inr(Number(value))}
-                  </span>
-                </div>
-              )}
-            />
-          }
-        />
-        <Bar
-          dataKey="revenue"
-          fill="var(--color-revenue)"
-          radius={[3, 3, 0, 0]}
-          maxBarSize={28}
-        />
-      </BarChart>
-    </ChartContainer>
+      <Grid horizontal numTicksRows={4} />
+      <Area
+        dataKey="revenue"
+        fill="var(--chart-1)"
+        fillOpacity={0.28}
+        strokeWidth={2}
+        fadeEdges={{ left: 0, right: 8 }}
+      />
+      <XAxis numTicks={{ base: 3, sm: 5, lg: 6 }} />
+      <ChartTooltip
+        rows={(p) => [
+          {
+            color: "var(--chart-1)",
+            label: "Sales",
+            value: inr(Number(p.revenue ?? 0)),
+          },
+          {
+            color: "var(--chart-2)",
+            label: "Orders",
+            value: Number(p.orders ?? 0),
+          },
+        ]}
+      />
+    </AreaChart>
   );
 }
 
-const hourConfig = {
-  orders: { label: "Orders", color: "var(--chart-2)" },
-} satisfies ChartConfig;
-
+/** Orders by hour of day. */
 export function HourChart({
   data,
 }: {
   data: { hour: number; orders: number }[];
 }) {
   const rows = data.map((d) => ({
-    ...d,
     label: `${d.hour % 12 || 12}${d.hour < 12 ? "am" : "pm"}`,
+    orders: d.orders,
   }));
   return (
-    <ChartContainer config={hourConfig} className="h-[180px] w-full">
-      <BarChart data={rows} margin={{ left: 0, right: 0, top: 8 }}>
-        <XAxis
-          dataKey="label"
-          tickLine={false}
-          axisLine={false}
-          interval={2}
-          fontSize={10}
-        />
-        <ChartTooltip
-          cursor={{ fill: "var(--muted)" }}
-          content={<ChartTooltipContent labelKey="label" />}
-        />
-        <Bar
-          dataKey="orders"
-          fill="var(--color-orders)"
-          radius={[2, 2, 0, 0]}
-        />
-      </BarChart>
-    </ChartContainer>
+    <BarChart
+      data={rows}
+      xDataKey="label"
+      aspectRatio="auto"
+      className="h-[180px] w-full"
+      margin={{ top: 12, right: 4, bottom: 24, left: 4 }}
+      barGap={0.3}
+    >
+      <Bar dataKey="orders" fill="var(--chart-1)" lineCap={3} />
+      <BarXAxis maxLabels={8} />
+      <ChartTooltip
+        showDatePill={false}
+        rows={(p) => [
+          {
+            color: "var(--chart-1)",
+            label: `Orders at ${String(p.label)}`,
+            value: Number(p.orders ?? 0),
+          },
+        ]}
+      />
+    </BarChart>
   );
 }

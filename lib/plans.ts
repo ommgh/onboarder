@@ -42,6 +42,6 @@ export const AI_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
  */
 export const PLAN_PRICES: Record<Plan, { amount: string; period: string }> = {
   FREE: { amount: "Free", period: "forever" },
-  PRO: { amount: "$10", period: "per month" },
-  ENTERPRISE: { amount: "$99", period: "per month" },
+  PRO: { amount: "₹499", period: "per month" },
+  ENTERPRISE: { amount: "₹4,999", period: "per month" },
 };

@@ -1,20 +1,30 @@
 import {
   ArrowRight,
-  BarChart3,
-  MessageCircle,
-  ShoppingBag,
-  Store,
-  Truck,
+  BadgeCheck,
+  Check,
+  IndianRupee,
+  Lightbulb,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { FAQS } from "@/components/marketing/faq-data";
 import { PricingCards } from "@/components/marketing/pricing";
 import {
+  Eyebrow,
+  Marquee,
+  SectionHeading,
+} from "@/components/marketing/primitives";
+import { ProductTour } from "@/components/marketing/product-tour";
+import { Reveal } from "@/components/marketing/reveal";
+import { SalesPreview } from "@/components/marketing/sales-preview";
+import {
+  ChannelHub,
+  HeroOrdersCard,
+  HeroScannedCard,
   LaneHandmade,
   LaneLoose,
   LanePackaged,
   OndcChecklistVisual,
-  ScanQueueVisual,
 } from "@/components/marketing/visuals";
 import {
   Accordion,
@@ -23,6 +33,19 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+
+const REACH = [
+  "Paytm",
+  "PhonePe Pincode",
+  "Magicpin",
+  "Ola",
+  "Shopify",
+  "Amazon.in",
+  "Flipkart",
+  "WhatsApp",
+  "Mystore",
+  "Your own storefront",
+];
 
 const LANES = [
   {
@@ -49,168 +72,235 @@ const LANES = [
 ];
 
 const CHANNELS = [
+  [
+    "ONDC network",
+    "Paytm, PhonePe Pincode, Magicpin and every other buyer app, for shoppers near you.",
+    "Free",
+  ],
+  [
+    "Your storefront",
+    "A web shop with your brand. Customers cart up and order on your WhatsApp.",
+    "Free",
+  ],
+  [
+    "Shopify",
+    "Your own branded store, created and kept in sync with one click.",
+    "Sync",
+  ],
+  [
+    "Amazon & Flipkart",
+    "Barcode-matched offers on Amazon.in, ready-filled listing sheets for Flipkart.",
+    "Match & list",
+  ],
+] as const;
+
+const ADVICE = [
   {
-    icon: Store,
-    name: "ONDC network",
-    body: "Paytm, PhonePe Pincode, Magicpin and every other buyer app, for shoppers near you.",
-    tag: "Free",
+    icon: TrendingUp,
+    text: "“Aashirvaad Atta 5 kg” is a best seller and running low. Restock before Saturday.",
   },
   {
-    icon: MessageCircle,
-    name: "Your storefront",
-    body: "A web shop with your brand. Customers cart up and order on your WhatsApp.",
-    tag: "Free",
+    icon: Lightbulb,
+    text: "18 listings have no photo. Products with photos sell far more.",
   },
   {
-    icon: ShoppingBag,
-    name: "Shopify",
-    body: "Your own branded store, created and kept in sync with one click.",
-    tag: "Sync",
-  },
-  {
-    icon: Truck,
-    name: "Amazon & Flipkart",
-    body: "Barcode-matched offers on Amazon.in, ready-filled listing sheets for Flipkart.",
-    tag: "Match & list",
+    icon: IndianRupee,
+    text: "Most orders arrive 7–8pm. Keep the shop phone close.",
   },
 ];
 
 export default function Home() {
   return (
     <>
-      {/* Hero */}
+      {/* ---------- Hero ---------- */}
       <section className="relative overflow-hidden">
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-ledger opacity-40 [mask-image:linear-gradient(to_bottom,black,transparent_85%)]"
+          className="absolute inset-0 -z-10 bg-dots [mask-image:radial-gradient(ellipse_at_top,black_20%,transparent_70%)]"
         />
-        <div className="container grid items-center gap-14 pt-14 pb-20 lg:grid-cols-[1.1fr_1fr] lg:pt-24 lg:pb-28">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-success" /> Now an ONDC
-              seller app
-              <span lang="hi" className="text-foreground/70">
-                · दुकान से ऑनलाइन
-              </span>
-            </div>
-            <h1 className="mt-6 font-serif text-5xl leading-[1.02] tracking-tight text-balance sm:text-6xl lg:text-7xl">
-              Your whole shop,{" "}
-              <em className="text-primary">online by evening.</em>
-            </h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground text-pretty">
-              A kirana stocks a thousand things. Typing them into a marketplace
-              takes weeks, so most shops never go online. Onboarder makes it an
-              afternoon: scan the packets, tick the loose staples, photograph
-              the handmade. Then sell on ONDC, Shopify, Amazon and your own
-              WhatsApp store.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="h-12 px-6 text-base">
-                <Link href="/auth/register">
-                  Start free <ArrowRight />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="h-12 px-6 text-base"
-              >
-                <Link href="#how">See how it works</Link>
-              </Button>
-            </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Free for your first 100 products. No card, no commission.
-            </p>
-          </div>
-          <ScanQueueVisual />
-        </div>
-      </section>
+        <div className="container relative pt-16 pb-16 text-center sm:pt-24 lg:pt-28">
+          <HeroScannedCard className="top-[19rem] left-6" />
+          <HeroOrdersCard className="top-[22rem] right-6" />
 
-      {/* Numbers */}
-      <section className="border-y bg-card">
-        <div className="container grid gap-8 py-10 sm:grid-cols-3">
-          {[
-            [
-              "1,000+",
-              "items in a typical kirana. Onboarder is built for that scale, not for ten.",
-            ],
-            [
-              "3 ways",
-              "to add products, matched to how you actually sell: packed, loose or handmade.",
-            ],
-            [
-              "1 tap",
-              "to go live on ONDC once your shop details are complete.",
-            ],
-          ].map(([big, small]) => (
-            <div key={big}>
-              <div className="font-serif text-4xl">{big}</div>
-              <p className="mt-1 text-sm text-muted-foreground">{small}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+          <Eyebrow className="animate-in fade-in-0 slide-in-from-bottom-2 duration-700">
+            <span className="size-1.5 rounded-full bg-primary" /> Now an ONDC
+            seller app
+            <span lang="hi" className="text-foreground/60">
+              · दुकान से ऑनलाइन
+            </span>
+          </Eyebrow>
 
-      {/* Lanes */}
-      <section id="how" className="container scroll-mt-20 py-24">
-        <div className="max-w-2xl">
-          <div className="text-sm font-medium text-primary">How it works</div>
-          <h2 className="mt-2 font-serif text-4xl tracking-tight text-balance sm:text-5xl">
-            Every kind of product has its own fast lane.
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            Not everything in your shop has a barcode, and that's fine.
-            Onboarder treats packaged, loose and handmade goods differently
-            because they are different.
+          <h1 className="mx-auto mt-6 max-w-4xl text-[2.6rem] leading-[1.06] font-semibold text-balance animate-in fade-in-0 slide-in-from-bottom-3 duration-700 sm:text-6xl lg:text-7xl">
+            <span className="text-foreground/80">Your whole shop,</span>{" "}
+            <span className="text-primary">online by evening.</span>
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground text-pretty animate-in fade-in-0 slide-in-from-bottom-3 duration-700 [animation-delay:120ms] [animation-fill-mode:both] sm:text-lg">
+            A kirana stocks a thousand things, and typing them into a
+            marketplace takes weeks. Onboarder makes it an afternoon: scan the
+            packets, tick the loose staples, photograph the handmade. Then sell
+            on ONDC, Shopify, Amazon and your own WhatsApp store.
           </p>
+
+          <div className="mt-9 flex flex-wrap justify-center gap-3 animate-in fade-in-0 slide-in-from-bottom-3 duration-700 [animation-delay:220ms] [animation-fill-mode:both]">
+            <Button asChild size="xl" variant="glow">
+              <Link href="/auth/register">
+                Start free <ArrowRight />
+              </Link>
+            </Button>
+            <Button asChild size="xl" variant="secondary">
+              <Link href="#how">See how it works</Link>
+            </Button>
+          </div>
+
+          <ul className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
+            {["Free for 100 products", "No card needed", "Zero commission"].map(
+              (t) => (
+                <li key={t} className="flex items-center gap-2">
+                  <BadgeCheck className="size-4 text-primary" /> {t}
+                </li>
+              ),
+            )}
+          </ul>
         </div>
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">
-          {LANES.map((l) => (
-            <div
-              key={l.title}
-              className="flex flex-col rounded-2xl border bg-card p-6"
-            >
-              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {l.kicker}
-              </div>
-              <h3 className="mt-2 text-xl font-semibold">{l.title}</h3>
-              <p className="mt-2 flex-1 text-sm text-muted-foreground text-pretty">
-                {l.body}
-              </p>
-              <div className="mt-6 rounded-xl bg-muted/50 p-4">{l.visual}</div>
-              <div className="mt-4 text-sm font-medium text-primary">
-                {l.stat}
-              </div>
-            </div>
-          ))}
+
+        {/* Reach marquee */}
+        <div className="border-y bg-card/50 py-5">
+          <Marquee duration={45}>
+            {REACH.map((r) => (
+              <span
+                key={r}
+                className="mx-8 text-lg font-semibold whitespace-nowrap text-foreground/35 sm:mx-10 sm:text-xl"
+              >
+                {r}
+              </span>
+            ))}
+          </Marquee>
         </div>
-        <p className="mt-6 text-sm text-muted-foreground">
-          Already keep stock in Excel, Tally, Vyapar or Marg? Import the whole
-          list from a spreadsheet in one go.
-        </p>
       </section>
 
-      {/* ONDC */}
+      {/* ---------- Problem + product tour ---------- */}
+      <section id="how" className="container scroll-mt-24 py-24 sm:py-32">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:items-end">
+          <Reveal>
+            <Eyebrow>How it works</Eyebrow>
+            <h2 className="mt-4 text-3xl leading-[1.15] font-semibold text-balance sm:text-[2.5rem]">
+              Every kind of product has its own fast lane.
+            </h2>
+          </Reveal>
+          <Reveal delay={100}>
+            <p className="text-base leading-relaxed text-muted-foreground text-pretty sm:text-lg">
+              Not everything in your shop has a barcode, and that's fine.
+              Onboarder treats packaged, loose and handmade goods differently
+              because they are different.
+            </p>
+          </Reveal>
+        </div>
+        <Reveal delay={150} className="mt-12">
+          <ProductTour />
+        </Reveal>
+        <div className="mt-14 grid gap-8 border-t pt-10 sm:grid-cols-3">
+          {[
+            ["1,000+", "items in a typical kirana. Built for that scale."],
+            ["3 ways", "to add products, matched to how you actually sell."],
+            ["1 tap", "to go live on ONDC once your shop details are in."],
+          ].map(([big, small], i) => (
+            <Reveal key={big} delay={i * 80}>
+              <div className="text-4xl font-semibold text-primary tabular">
+                {big}
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">{small}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- Lanes bento ---------- */}
+      <section className="border-y bg-band">
+        <div className="container py-24 sm:py-28">
+          <SectionHeading
+            align="center"
+            eyebrow="Three lanes"
+            title="From shelf to listing, the way you already work"
+            body="Already keep stock in Excel, Tally, Vyapar or Marg? Import the whole list from a spreadsheet in one go."
+          />
+          <div className="mt-14 grid gap-4 lg:grid-cols-3">
+            {LANES.map((l, i) => (
+              <Reveal
+                key={l.title}
+                delay={i * 100}
+                className="flex flex-col rounded-2xl border bg-card p-6 transition-shadow hover:shadow-soft"
+              >
+                <div className="rounded-xl border bg-background p-4">
+                  {l.visual}
+                </div>
+                <div className="mt-6 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  {l.kicker}
+                </div>
+                <h3 className="mt-1.5 text-lg font-semibold">{l.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground text-pretty">
+                  {l.body}
+                </p>
+                <div className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-full border border-sage/60 bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                  <Check className="size-3.5" /> {l.stat}
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- Channels hub ---------- */}
+      <section className="container py-24 sm:py-32">
+        <div className="grid items-center gap-14 lg:grid-cols-2">
+          <Reveal>
+            <SectionHeading
+              eyebrow="Sell everywhere"
+              title="One catalog. Every place your customers shop."
+              body="Add a product once. Onboarder keeps the price, stock and photos in step across every channel you switch on."
+            />
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {CHANNELS.map(([name, body, tag]) => (
+                <li key={name} className="rounded-xl border bg-card p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">{name}</span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                      {tag}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                    {body}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+          <Reveal delay={150}>
+            <ChannelHub />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ---------- ONDC (forest band) ---------- */}
       <section
         id="ondc"
-        className="scroll-mt-16 border-y border-white/5 bg-stone-950 text-stone-100 dark:bg-[oklch(0.24_0.03_50)]"
+        className="scroll-mt-20 bg-forest text-forest-foreground"
       >
-        <div className="container grid items-center gap-12 py-24 lg:grid-cols-2">
-          <div>
-            <div className="text-sm font-medium text-amber-300">
+        <div className="container grid items-center gap-12 py-24 sm:py-28 lg:grid-cols-2">
+          <Reveal>
+            <Eyebrow className="border-white/15 bg-white/5 text-forest-foreground/75">
               Open Network for Digital Commerce
-            </div>
-            <h2 className="mt-2 font-serif text-4xl tracking-tight text-balance sm:text-5xl">
+            </Eyebrow>
+            <h2 className="mt-4 text-3xl leading-[1.15] font-semibold text-balance sm:text-[2.5rem]">
               One listing. Every shopping app in India.
             </h2>
-            <p className="mt-5 text-stone-300 text-pretty">
+            <p className="mt-5 leading-relaxed text-forest-foreground/70 text-pretty">
               ONDC is India's open network for commerce. Instead of joining one
               marketplace, your shop joins the network, and shoppers can find it
               from Paytm, PhonePe Pincode, Magicpin and every other buyer app,
               matched by how close you are.
             </p>
-            <ul className="mt-6 space-y-3 text-sm text-stone-300">
+            <ul className="mt-7 space-y-3 text-sm text-forest-foreground/75">
               {[
                 "Onboarder is your seller app: we handle the protocol, signing and compliance.",
                 "We check your GSTIN, FSSAI, address and every product before you go live.",
@@ -218,136 +308,160 @@ export default function Home() {
                 "No commission to Onboarder. Ever.",
               ].map((t) => (
                 <li key={t} className="flex gap-3">
-                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-amber-300" />
+                  <Check className="mt-0.5 size-4 shrink-0 text-[oklch(0.86_0.13_140)]" />
                   {t}
                 </li>
               ))}
             </ul>
-          </div>
-          <OndcChecklistVisual />
+          </Reveal>
+          <Reveal delay={150}>
+            <OndcChecklistVisual />
+          </Reveal>
         </div>
       </section>
 
-      {/* Channels */}
-      <section className="container py-24">
-        <div className="max-w-2xl">
-          <div className="text-sm font-medium text-primary">
-            Sell everywhere
-          </div>
-          <h2 className="mt-2 font-serif text-4xl tracking-tight text-balance sm:text-5xl">
-            Your catalog, wherever your customers shop.
-          </h2>
-        </div>
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {CHANNELS.map((c) => (
-            <div key={c.name} className="rounded-2xl border bg-card p-6">
-              <div className="flex items-center justify-between">
-                <c.icon className="size-6 text-primary" />
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                  {c.tag}
-                </span>
+      {/* ---------- Advice ---------- */}
+      <section className="container py-24 sm:py-32">
+        <div className="grid items-center gap-14 lg:grid-cols-[1fr_1.15fr]">
+          <Reveal>
+            <SectionHeading
+              eyebrow="Then it helps you sell"
+              title="Advice, not just charts."
+              body="Every order, from ONDC, Shopify or your own counter, feeds one simple view of your shop. Onboarder scores every listing, tells you which fix will sell the most, and rewrites weak listings with AI in one tap."
+            />
+            <ul className="mt-8 space-y-3">
+              {ADVICE.map((a) => (
+                <li
+                  key={a.text}
+                  className="flex gap-3 rounded-xl border bg-card p-3.5 text-sm"
+                >
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
+                    <a.icon className="size-4" />
+                  </span>
+                  <span className="pt-1 text-muted-foreground">{a.text}</span>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+          <Reveal delay={150}>
+            <div className="rounded-3xl border bg-band p-3">
+              <div className="rounded-2xl border bg-card p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold">Sales</div>
+                    <div className="text-xs text-muted-foreground">
+                      Sharma General Store · last 14 days
+                    </div>
+                  </div>
+                  <div className="flex gap-4 text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <span className="size-2 rounded-full bg-chart-1" /> Online
+                    </span>
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <span className="size-2 rounded-full bg-chart-2" />{" "}
+                      Counter
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-baseline gap-2">
+                  <span className="text-3xl font-semibold tabular">
+                    ₹48,960
+                  </span>
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                    +31% since ONDC
+                  </span>
+                </div>
+                <div className="mt-2 -mx-2">
+                  <SalesPreview />
+                </div>
               </div>
-              <h3 className="mt-5 font-semibold">{c.name}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">{c.body}</p>
             </div>
-          ))}
+          </Reveal>
         </div>
       </section>
 
-      {/* Grow */}
-      <section className="border-y bg-card">
-        <div className="container grid items-center gap-12 py-24 lg:grid-cols-2">
-          <div className="order-2 rounded-2xl border bg-background p-5 lg:order-1">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <BarChart3 className="size-4 text-primary" /> What to do next
-            </div>
-            <ul className="mt-4 divide-y text-sm">
-              {[
-                "“Aashirvaad Atta 5 kg” is a best seller and running low. Restock before Saturday.",
-                "Most orders arrive 7–8pm. Keep the shop phone close.",
-                "18 listings have no photo. Products with photos sell far more.",
-                "6 products haven't sold in 30 days. Try a combo or a better photo.",
-              ].map((t) => (
-                <li key={t} className="py-3 text-muted-foreground">
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="order-1 lg:order-2">
-            <div className="text-sm font-medium text-primary">
-              Then it helps you sell
-            </div>
-            <h2 className="mt-2 font-serif text-4xl tracking-tight text-balance sm:text-5xl">
-              Advice, not just charts.
-            </h2>
-            <p className="mt-5 text-muted-foreground text-pretty">
-              Every order, from ONDC, Shopify or your own counter, feeds one
-              simple view of your shop. Onboarder scores every listing, tells
-              you which fix will sell the most, and rewrites weak listings with
-              AI in one tap.
-            </p>
+      {/* ---------- Pricing ---------- */}
+      <section id="pricing" className="scroll-mt-20 border-y bg-band">
+        <div className="container py-24 sm:py-28">
+          <SectionHeading
+            align="center"
+            eyebrow="Pricing"
+            title="Simple plans. No commission."
+            body="Start free and upgrade when you're selling every day."
+          />
+          <div className="mt-14">
+            <PricingCards />
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="container scroll-mt-16 py-24">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-serif text-4xl tracking-tight sm:text-5xl">
-            Simple plans. No commission.
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            Start free and upgrade when you're selling every day.
-          </p>
-        </div>
-        <div className="mt-12">
-          <PricingCards />
+      {/* ---------- FAQ ---------- */}
+      <section className="container py-24 sm:py-32">
+        <div className="grid gap-12 lg:grid-cols-[1fr_1.5fr]">
+          <div>
+            <SectionHeading
+              eyebrow="FAQ"
+              title="Questions shopkeepers ask"
+              body="Can't find yours? We read every message."
+            />
+            <Button asChild variant="secondary" className="mt-6">
+              <Link href="/faq">
+                All questions <ArrowRight />
+              </Link>
+            </Button>
+          </div>
+          <Accordion
+            type="single"
+            collapsible
+            defaultValue={FAQS[0]?.q}
+            className="space-y-3"
+          >
+            {FAQS.slice(0, 5).map((f) => (
+              <AccordionItem
+                key={f.q}
+                value={f.q}
+                className="rounded-xl border bg-card px-5 data-[state=open]:shadow-soft"
+              >
+                <AccordionTrigger className="text-left text-[15px] hover:no-underline">
+                  {f.q}
+                </AccordionTrigger>
+                <AccordionContent className="leading-relaxed text-muted-foreground">
+                  {f.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="container max-w-3xl pb-24">
-        <h2 className="font-serif text-4xl tracking-tight">
-          Questions shopkeepers ask
-        </h2>
-        <Accordion type="single" collapsible className="mt-8">
-          {FAQS.slice(0, 5).map((f) => (
-            <AccordionItem key={f.q} value={f.q}>
-              <AccordionTrigger className="text-left text-base">
-                {f.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {f.a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-        <Link
-          href="/faq"
-          className="mt-6 inline-flex items-center gap-1 text-sm text-primary hover:underline"
-        >
-          All questions <ArrowRight className="size-4" />
-        </Link>
-      </section>
-
-      {/* CTA */}
-      <section className="container pb-24">
-        <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-14 text-center text-primary-foreground sm:px-12">
-          <div aria-hidden className="absolute inset-0 bg-ledger opacity-10" />
-          <h2 className="relative font-serif text-4xl tracking-tight text-balance sm:text-5xl">
-            Open your shop to the whole city tonight.
+      {/* ---------- CTA ---------- */}
+      <section className="relative overflow-hidden border-t bg-band">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-dots [mask-image:radial-gradient(ellipse_at_center,black_10%,transparent_70%)]"
+        />
+        <div className="container relative py-24 text-center sm:py-28">
+          <h2 className="mx-auto max-w-3xl text-3xl leading-[1.12] font-semibold text-balance sm:text-5xl">
+            Open your shop to the{" "}
+            <span className="text-primary">whole city tonight.</span>
           </h2>
-          <p className="relative mx-auto mt-4 max-w-xl text-primary-foreground/85">
+          <p className="mx-auto mt-5 max-w-xl text-muted-foreground">
             Start with the shelf in front of you. Your first 100 products are
             free.
           </p>
-          <Button
-            asChild
-            size="lg"
-            variant="secondary"
-            className="relative mt-8 h-12 px-8 text-base"
-          >
+          <ul className="mt-6 flex flex-wrap justify-center gap-2">
+            {["ONDC seller app", "WhatsApp storefront", "AI photos"].map(
+              (t) => (
+                <li
+                  key={t}
+                  className="inline-flex items-center gap-1 rounded-md border border-sage/60 bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
+                >
+                  <Check className="size-3" /> {t}
+                </li>
+              ),
+            )}
+          </ul>
+          <Button asChild size="xl" variant="glow" className="mt-9">
             <Link href="/auth/register">
               Start free <ArrowRight />
             </Link>

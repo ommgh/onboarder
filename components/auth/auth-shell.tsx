@@ -20,14 +20,19 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           .
         </p>
       </div>
-      <div className="relative hidden overflow-hidden bg-stone-950 p-12 text-stone-100 lg:flex lg:flex-col lg:justify-center">
-        <div aria-hidden className="absolute inset-0 bg-ledger opacity-10" />
+      <div className="relative hidden overflow-hidden bg-forest p-12 text-forest-foreground lg:flex lg:flex-col lg:justify-center">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-dots opacity-40 invert"
+        />
         <div className="relative mx-auto w-full max-w-md">
-          <p className="font-serif text-4xl leading-tight text-balance">
+          <p className="text-3xl leading-tight font-semibold tracking-tight text-balance">
             Scan the shelf. Tick the staples.{" "}
-            <em className="text-amber-300">Sell everywhere.</em>
+            <span className="text-[oklch(0.86_0.13_140)]">
+              Sell everywhere.
+            </span>
           </p>
-          <p className="mt-3 text-stone-400">
+          <p className="mt-3 text-forest-foreground/65">
             Built so a neighbourhood shop can put a thousand products online in
             an afternoon.
           </p>
