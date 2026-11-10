@@ -1,192 +1,61 @@
-// /api/products/[id]/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { auth } from "@/auth";
+import { db } from "@/lib/db";
+import { productPatch } from "@/lib/products/schema";
+import { toProductDTO } from "@/lib/products/serialize";
+import { handler, ok, parseJson } from "@/lib/server/api";
+import { assertSkusFree } from "@/lib/server/products";
+import { HttpError, requireUserId } from "@/lib/server/session";
 
-const prisma = new PrismaClient();
+type Ctx = { params: Promise<{ id: string }> };
 
-// GET - Get a single product
-export async function GET(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
-  try {
-    const session = await auth();
-    if (!session || !session.user?.id) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
-
-    // Await params before accessing properties
-    const { id } = await context.params;
-
-    const product = await prisma.product.findUnique({
-      where: {
-        id: id,
-        userId: session.user.id, // Ensure user owns this product
-      },
-    });
-
-    if (!product) {
-      return NextResponse.json(
-        { success: false, error: "Product not found" },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        product: {
-          ...product,
-          price: product.price ? Number(product.price) : undefined,
-        },
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error("Product fetch error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch product" },
-      { status: 500 },
-    );
-  }
+async function owned(userId: string, id: string) {
+  const product = await db.product.findFirst({
+    where: { id, userId },
+    include: { listings: true },
+  });
+  if (!product) throw new HttpError(404, "Product not found.");
+  return product;
 }
 
-// DELETE - Delete a product
-export async function DELETE(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
-  try {
-    const session = await auth();
-    if (!session || !session.user?.id) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
+export const GET = handler(async (_req: Request, ctx: Ctx) => {
+  const userId = await requireUserId();
+  return ok({
+    product: toProductDTO(await owned(userId, (await ctx.params).id)),
+  });
+});
 
-    // Await params before accessing properties
-    const { id } = await context.params;
+export const PATCH = handler(async (req: Request, ctx: Ctx) => {
+  const userId = await requireUserId();
+  const { id } = await ctx.params;
+  await owned(userId, id);
+  const patch = await parseJson(req, productPatch);
+  if (patch.sku !== undefined) await assertSkusFree(userId, [patch.sku], id);
+  const { attributes, ...rest } = patch;
+  const product = await db.product.update({
+    where: { id },
+    data: {
+      ...rest,
+      ...(attributes !== undefined
+        ? { attributes: attributes ?? undefined }
+        : {}),
+    } as never,
+    include: { listings: true },
+  });
+  // Edits invalidate pushed listings so the seller knows to re-sync.
+  await db.channelListing.updateMany({
+    where: {
+      productId: id,
+      provider: { in: ["SHOPIFY", "AMAZON"] },
+      status: "LIVE",
+    },
+    data: { status: "PENDING", message: "Edited since last sync" },
+  });
+  return ok({ product: toProductDTO(product) });
+});
 
-    // First check if product exists and belongs to user
-    const product = await prisma.product.findUnique({
-      where: {
-        id: id,
-      },
-    });
-
-    if (!product) {
-      return NextResponse.json(
-        { success: false, error: "Product not found" },
-        { status: 404 },
-      );
-    }
-
-    if (product.userId !== session.user.id) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 },
-      );
-    }
-
-    // Delete the product
-    await prisma.product.delete({
-      where: {
-        id: id,
-      },
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Product deleted successfully",
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error("Product deletion error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to delete product" },
-      { status: 500 },
-    );
-  }
-}
-
-// PATCH - Update a product
-export async function PATCH(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
-  try {
-    const session = await auth();
-    if (!session || !session.user?.id) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
-
-    // Await params before accessing properties
-    const { id } = await context.params;
-
-    // First check if product exists and belongs to user
-    const product = await prisma.product.findUnique({
-      where: {
-        id: id,
-      },
-    });
-
-    if (!product) {
-      return NextResponse.json(
-        { success: false, error: "Product not found" },
-        { status: 404 },
-      );
-    }
-
-    if (product.userId !== session.user.id) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 },
-      );
-    }
-
-    const body = await req.json();
-
-    // Update the product
-    const updatedProduct = await prisma.product.update({
-      where: {
-        id: id,
-      },
-      data: {
-        name: body.name,
-        description: body.description,
-        category: body.category,
-        price: body.price,
-        ImageUrl: body.ImageUrl,
-      },
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        product: {
-          ...updatedProduct,
-          price: updatedProduct.price
-            ? Number(updatedProduct.price)
-            : undefined,
-        },
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error("Product update error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to update product" },
-      { status: 500 },
-    );
-  }
-}
+export const DELETE = handler(async (_req: Request, ctx: Ctx) => {
+  const userId = await requireUserId();
+  const { id } = await ctx.params;
+  await owned(userId, id);
+  await db.product.delete({ where: { id } });
+  return ok({ deleted: true });
+});

@@ -1,8 +1,8 @@
-import { Header } from "./header";
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { BackButton } from "./back-button";
-import { Card, CardHeader, CardFooter } from "@/components/ui/card";
+import { Header } from "./header";
 
-export const ErrorCard = (props: any) => {
+export const ErrorCard = () => {
   return (
     <Card>
       <CardHeader>

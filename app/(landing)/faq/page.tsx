@@ -1,18 +1,43 @@
-import React from "react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { FAQS } from "@/components/marketing/faq-data";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
-import { Background } from "@/components/background";
-import { FAQ } from "@/components/blocks/faq";
+export const metadata: Metadata = { title: "FAQ" };
 
-const Page = () => {
+export default function FaqPage() {
   return (
-    <Background>
-      <FAQ
-        className="py-28 text-center lg:pt-44 lg:pb-32"
-        className2="max-w-xl lg:grid-cols-1"
-        headerTag="h1"
-      />
-    </Background>
+    <div className="container max-w-3xl py-20">
+      <h1 className="font-serif text-5xl tracking-tight sm:text-6xl">
+        Questions
+      </h1>
+      <p className="mt-4 text-lg text-muted-foreground">
+        Can't find your answer?{" "}
+        <Link
+          href="/contact"
+          className="text-primary underline-offset-4 hover:underline"
+        >
+          Write to us
+        </Link>
+        .
+      </p>
+      <Accordion type="multiple" className="mt-10">
+        {FAQS.map((f) => (
+          <AccordionItem key={f.q} value={f.q}>
+            <AccordionTrigger className="text-left text-base">
+              {f.q}
+            </AccordionTrigger>
+            <AccordionContent className="text-base text-muted-foreground">
+              {f.a}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
   );
-};
-
-export default Page;
+}

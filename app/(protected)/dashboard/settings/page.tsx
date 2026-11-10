@@ -1,136 +1,65 @@
-import Link from "next/link";
-import { CreditCard, LogOut, Shield, ShoppingBag, Trash } from "lucide-react";
-import { auth, signOut } from "@/auth";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MarketplaceConnection } from "@/components/dashboard/marketplace-connection";
-import { getNextBillingDate } from "@/data/subscription";
-import { getUserSubscription } from "@/data/user";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { db } from "@/lib/db";
+import { AI_PERIOD_MS, PLAN_LIMITS } from "@/lib/plans";
+import { getPlan, getUserOrRedirect } from "@/lib/server/session";
+import { ensureStore } from "@/lib/server/store";
+import { SettingsView } from "./settings-view";
+
+export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const session = await auth();
-  const user = session?.user;
-
-  if (!user?.id) {
-    return null;
-  }
-
-  const plan = getUserSubscription(user.id);
-  const nextBillingDate = getNextBillingDate(user.id);
-
+  const user = await getUserOrRedirect();
+  const [store, { subscription, limits }, products, models, connections] =
+    await Promise.all([
+      ensureStore(user.id),
+      getPlan(user.id),
+      db.product.count({
+        where: { userId: user.id, status: { not: "ARCHIVED" } },
+      }),
+      db.models.count({ where: { userId: user.id } }),
+      db.marketplaceConnection.count({ where: { userId: user.id } }),
+    ]);
+  const { bankAccountEncrypted: _secret, ...rest } = store;
+  const aiResetsAt = new Date(
+    subscription.aiPeriodStart.getTime() + AI_PERIOD_MS,
+  );
+  const aiUsed = aiResetsAt < new Date() ? 0 : subscription.aiCreditsUsed;
   return (
-    <div className="container mx-auto p-4 md:p-8 min-h-screen overflow-x-hidden">
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>
-        </div>
-
-        <Card className="flex flex-row justify-between px-2">
-          <CardContent className="flex items-center space-x-4">
-            <Avatar className="h-14 w-14">
-              <AvatarImage
-                src={user?.image ?? undefined}
-                alt={user?.name ?? ""}
-              />
-              <AvatarFallback>
-                {user?.name
-                  ?.split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-medium">{user?.name}</p>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-            </div>
-          </CardContent>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/auth/login" });
-            }}
-          >
-            <Button variant="ghost" type="submit" className="mt-2.5">
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </form>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="flex items-center text-lg">
-              <CreditCard className="mr-2 h-5 w-5" /> Billing
-            </CardTitle>
-            <Link
-              href={(await plan) === "FREE" ? "/pricing" : "/dashboard/billing"}
-            >
-              <Button variant="outline" size="sm">
-                {(await plan) === "FREE" ? "Upgrade" : "Manage"}
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <p className="text-sm text-muted-foreground">
-                Current Plan:{" "}
-                <span className="font-medium text-foreground">{plan}</span>
-              </p>
-              {(await plan) !== "FREE" && (
-                <p className="text-sm text-muted-foreground">
-                  Next Payment:{" "}
-                  <span className="font-medium">{nextBillingDate}</span>
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="flex items-center text-lg">
-              <ShoppingBag className="mr-2 h-5 w-5" /> Channels
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <MarketplaceConnection provider="amazon" />
-            <MarketplaceConnection provider="flipkart" />
-            <div className="flex items-center justify-between rounded-md border p-3 overflow-x-hidden">
-              <span>Shopify</span>
-              <Button size="sm">Connect</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="flex items-center text-lg">
-              <Shield className="mr-2 h-5 w-5" /> Security
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <span>Two-factor authentication</span>
-              <Button size="sm" variant="outline">
-                Enable
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-destructive/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-destructive text-lg">
-              <Trash className="mr-2 h-5 w-5" /> Danger Zone
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="destructive" size="sm">
-              Delete Account
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <Suspense>
+      <SettingsView
+        store={{
+          ...rest,
+          deliveryFee: Number(store.deliveryFee),
+          minOrderValue: Number(store.minOrderValue),
+          createdAt: "",
+          updatedAt: "",
+          brandKit: null,
+        }}
+        account={{ name: user.name ?? "", email: user.email ?? "" }}
+        plan={{
+          name: subscription.name,
+          label: limits.label,
+          status: subscription.status,
+          nextBillingDate: subscription.nextBillingDate,
+          usage: [
+            { label: "Products", used: products, limit: limits.products },
+            {
+              label: "AI credits this month",
+              used: aiUsed,
+              limit: limits.aiCredits,
+              note: `Resets ${aiResetsAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`,
+            },
+            {
+              label: "Marketplace connections",
+              used: connections,
+              limit: limits.channels,
+            },
+            { label: "Try-on models", used: models, limit: limits.models },
+          ],
+        }}
+        plans={Object.entries(PLAN_LIMITS).map(([id, l]) => ({ id, ...l }))}
+      />
+    </Suspense>
   );
 }

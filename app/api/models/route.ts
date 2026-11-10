@@ -1,85 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { auth } from "@/auth";
+import { db } from "@/lib/db";
+import { handler, ok, parseJson } from "@/lib/server/api";
+import { getPlan, HttpError, requireUserId } from "@/lib/server/session";
 
-const prisma = new PrismaClient();
-
-const createModelSchema = z.object({
-  name: z.string().min(1, "Model name is required").max(255),
-  ImageUrl: z.string().url("Valid image URL is required"),
+export const GET = handler(async () => {
+  const userId = await requireUserId();
+  const models = await db.models.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+  return ok({ models });
 });
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const validatedData = createModelSchema.parse(body);
-
-    const model = await prisma.models.create({
-      data: {
-        name: validatedData.name,
-        ImageUrl: validatedData.ImageUrl,
-        userId: session.user.id,
-      },
-    });
-
-    return NextResponse.json(model);
-  } catch (error) {
-    console.error("Model creation error:", error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation error",
-          details: error,
-        },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to create model",
-      },
-      { status: 500 },
+export const POST = handler(async (req: Request) => {
+  const userId = await requireUserId();
+  const { name, imageUrl } = await parseJson(
+    req,
+    z.object({
+      name: z.string().trim().min(1).max(60),
+      imageUrl: z.string().url(),
+    }),
+  );
+  const [{ limits }, count] = await Promise.all([
+    getPlan(userId),
+    db.models.count({ where: { userId } }),
+  ]);
+  if (count >= limits.models) {
+    throw new HttpError(
+      402,
+      `Your ${limits.label} plan includes ${limits.models} models. Delete one or upgrade.`,
+      "MODEL_LIMIT",
     );
   }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const models = await prisma.models.findMany({
-      where: {
-        userId: session.user.id,
-      },
-    });
-    const response = NextResponse.json({
-      success: true,
-      models,
-    });
-    response.headers.set(
-      "Cache-Control",
-      "private, max-age=300, stale-while-revalidate=60",
-    );
-    return response;
-  } catch (error) {
-    console.error("Models retrieval error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to retrieve models",
-      },
-      { status: 500 },
-    );
-  }
-}
+  return ok(
+    { model: await db.models.create({ data: { name, imageUrl, userId } }) },
+    { status: 201 },
+  );
+});

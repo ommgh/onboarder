@@ -1,3 +1,10 @@
+// Onboarder data model.
+//
+// This project syncs the schema with `prisma db push`. Every change here must stay
+// additive (new tables, new nullable/defaulted columns, relaxed constraints) so a push
+// against the production database never drops data. Renamed fields keep their original
+// column names through @map.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,27 +26,72 @@ enum Plan {
   ENTERPRISE
 }
 
+/// Sales channels. ONDC is not an OAuth connection but listings and orders use it.
 enum MarketplaceProvider {
   AMAZON
   FLIPKART
   SHOPIFY
   EBAY
   ETSY
+  ONDC
+}
+
+/// The three onboarding lanes, plus apparel which is handmade/custom with try-on.
+enum ProductType {
+  PACKAGED // has a barcode and a digital footprint (organised)
+  LOOSE // sold by weight/volume: atta, dal, sugar, vegetables (un-organised)
+  HANDMADE // art, craft, custom goods
+  APPAREL
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum ListingStatus {
+  PENDING
+  LIVE
+  NEEDS_ACTION
+  FAILED
+  PAUSED
+}
+
+enum OrderSource {
+  MANUAL
+  ONDC
+  SHOPIFY
+  AMAZON
+  FLIPKART
+  STOREFRONT
+}
+
+enum OrderStatus {
+  CREATED
+  ACCEPTED
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  RETURNED
 }
 
 model User {
-  id                  String                @id @default(cuid())
-  name                String?
-  email               String                @unique
-  emailVerified       DateTime?
-  image               String?
-  password            String?
-  role                UserRole              @default(USER)
-  accounts            Account[]
-  products            Product[]
-  models              Models[]
-  subscriptions       Subscription[]
+  id                     String                  @id @default(cuid())
+  name                   String?
+  email                  String                  @unique
+  emailVerified          DateTime?
+  image                  String?
+  password               String?
+  role                   UserRole                @default(USER)
+  accounts               Account[]
+  products               Product[]
+  models                 Models[]
+  subscriptions          Subscription[]
   marketplaceConnections MarketplaceConnection[]
+  store                  Store?
+  orders                 Order[]
 }
 
 model Account {
@@ -72,35 +124,210 @@ model VerificationToken {
   @@unique([email, token])
 }
 
+/// Plan limits are derived from `name` in lib/plans.ts. The limit columns are kept in
+/// sync by the payments webhook for reporting but are not the source of truth.
 model Subscription {
-  id                 String  @id @default(cuid())
-  name               Plan    @default(FREE)
-  userId             String  @unique
+  id                 String   @id @default(cuid())
+  name               Plan     @default(FREE)
+  userId             String   @unique
   addons             String?
   dodoCustomerId     String?
   dodoSubscriptionId String?
-  status             String? @default("active")
-  productLimit       Int     @default(10)
-  modelLimit         Int     @default(2)
-  storeLimit         Int     @default(1)
+  status             String?  @default("active")
+  productLimit       Int      @default(100)
+  modelLimit         Int      @default(2)
+  storeLimit         Int      @default(1)
   nextBillingDate    String?
-  Analytics          Boolean @default(false)
-  Branding           Boolean @default(false)
+  analytics          Boolean  @default(false) @map("Analytics")
+  branding           Boolean  @default(false) @map("Branding")
+  aiCreditsUsed      Int      @default(0)
+  aiPeriodStart      DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+/// A seller's shop. Feeds the public storefront, ONDC provider details and channel
+/// defaults. One per user for now.
+model Store {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  name        String
+  slug        String  @unique
+  tagline     String?
+  description String?
+  logoUrl     String?
+  brandColor  String?
+  brandKit    Json?
+
+  // Contact
+  phone    String?
+  email    String?
+  whatsapp String?
+
+  // Compliance
+  legalName    String?
+  gstin        String?
+  fssaiLicense String?
+
+  // Location
+  addressLine String?
+  locality    String?
+  city        String?
+  state       String? // two-letter state code, e.g. KA
+  pincode     String?
+  stdCode     String? // ONDC city code, e.g. std:080
+  latitude    Float?
+  longitude   Float?
+
+  // Operations
+  openTime          String  @default("0900")
+  closeTime         String  @default("2100")
+  openDays          String  @default("1,2,3,4,5,6,7")
+  deliveryEnabled   Boolean @default(true)
+  pickupEnabled     Boolean @default(true)
+  serviceRadiusKm   Float   @default(3)
+  timeToShipMinutes Int     @default(60)
+  returnable        Boolean @default(true)
+  returnWindowHours Int     @default(24)
+  codEnabled        Boolean @default(true)
+  deliveryFee       Decimal @default(0) @db.Decimal(10, 2)
+  minOrderValue     Decimal @default(0) @db.Decimal(10, 2)
+
+  // Grievance contact (mandatory on ONDC)
+  consumerCareName  String?
+  consumerCareEmail String?
+  consumerCarePhone String?
+
+  // Settlement (account number is encrypted at rest)
+  bankAccountName      String?
+  bankAccountEncrypted String?
+  bankAccountLast4     String?
+  bankIfsc             String?
+  upiId                String?
+
+  // Channels
+  ondcEnabled       Boolean  @default(false)
+  ondcDomains       String[] @default(["ONDC:RET10"])
+  storefrontEnabled Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// One row per sellable SKU. Pack sizes of a loose item ("Atta 1 kg", "Atta 5 kg")
+/// are separate rows sharing a `variantGroup`, which channels group back together.
 model Product {
-  id                  String                @id @default(cuid())
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  name                String
-  description         String
-  category            String
-  price               Decimal?              @db.Decimal(10, 2)
-  ImageUrl            String
-  userId              String
-  user                User                  @relation(fields: [userId], references: [id])
+  id        String        @id @default(cuid())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  userId    String
+  type      ProductType   @default(PACKAGED)
+  status    ProductStatus @default(ACTIVE)
+
+  name        String
+  description String  @default("")
+  category    String  @default("General")
+  brand       String?
+  sku         String?
+  barcode     String?
+
+  price Decimal? @db.Decimal(10, 2)
+  mrp   Decimal? @db.Decimal(10, 2)
+  /// null means stock is not tracked (always available)
+  stock Int?
+
+  unit      String? // kg, g, l, ml, piece, pack, dozen
+  unitValue Decimal? @db.Decimal(10, 3)
+
+  imageUrl String   @default("") @map("ImageUrl")
+  images   String[] @default([])
+
+  variantGroup String?
+  variantLabel String?
+
+  // Listing metadata used by ONDC and marketplaces
+  ondcCategory        String?
+  vegType             String? // veg | nonveg | egg
+  manufacturer        String?
+  manufacturerAddress String?
+  commonName          String?
+  countryOfOrigin     String  @default("IND")
+  hsnCode             String?
+  gstRate             Decimal? @db.Decimal(5, 2)
+  attributes          Json?
+  aiGenerated         Boolean @default(false)
+
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listings   ChannelListing[]
+  orderItems OrderItem[]
+
+  @@index([userId, sku])
+  @@index([userId, status])
+  @@index([userId, barcode])
+  @@index([userId, variantGroup])
+}
+
+model ChannelListing {
+  id          String              @id @default(cuid())
+  productId   String
+  provider    MarketplaceProvider
+  status      ListingStatus       @default(PENDING)
+  externalId  String?
+  externalUrl String?
+  message     String?
+  syncedAt    DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, provider])
+  @@index([provider, status])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  orderNumber     String      @unique
+  source          OrderSource @default(MANUAL)
+  externalId      String?
+  status          OrderStatus @default(CREATED)
+  paymentStatus   String      @default("PENDING") // PENDING | PAID | REFUNDED
+  paymentMethod   String? // COD | PREPAID | UPI | CASH
+  customerName    String?
+  customerPhone   String?
+  customerAddress String?
+  subtotal        Decimal     @default(0) @db.Decimal(12, 2)
+  deliveryFee     Decimal     @default(0) @db.Decimal(12, 2)
+  total           Decimal     @default(0) @db.Decimal(12, 2)
+  notes           String?
+  /// Protocol context needed to send unsolicited updates (ONDC bap_uri, transaction_id, ...)
+  channelData     Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items OrderItem[]
+
+  @@unique([source, externalId])
+  @@index([userId, createdAt])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String?
+  name      String
+  sku       String?
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
 }
 
 model Models {
@@ -108,9 +335,9 @@ model Models {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   name      String
-  ImageUrl  String
+  imageUrl  String   @map("ImageUrl")
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model MarketplaceConnection {
@@ -119,11 +346,14 @@ model MarketplaceConnection {
   provider              MarketplaceProvider
   sellerId              String
   marketplaceId         String
+  shopDomain            String?
+  scopes                String?
   encryptedAccessToken  String              @db.Text
-  encryptedRefreshToken String              @db.Text
-  accessTokenExpiresAt  DateTime
-  refreshTokenExpiresAt DateTime
+  encryptedRefreshToken String?             @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
   metadata              Json?
+  lastSyncAt            DateTime?
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
 
@@ -140,9 +370,28 @@ model OAuthState {
   state         String   @unique
   userId        String
   marketplaceId String
+  provider      String?
+  extra         Json?
   expiresAt     DateTime
   createdAt     DateTime @default(now())
 
-  @@index([state])
   @@index([expiresAt])
+}
+
+/// Every ONDC request and callback, in both directions. ONDC certification asks for
+/// these logs, and they are the only way to debug a failed transaction.
+model OndcLog {
+  id            String   @id @default(cuid())
+  transactionId String
+  messageId     String
+  action        String
+  direction     String // in | out
+  counterparty  String?
+  payload       Json
+  response      Json?
+  ok            Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  @@index([transactionId])
+  @@index([createdAt])
 }

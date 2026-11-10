@@ -1,9 +1,12 @@
 "use client";
-import * as z from "zod";
-import { CardWrapper } from "./card-wrapper";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import type * as z from "zod";
+import { register } from "@/actions/register";
+import { RegisterSchema } from "@/schemas";
+import { FormError } from "../form-error";
+import { FormSuccess } from "../form-sucess";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -13,11 +16,8 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { RegisterSchema } from "@/schemas";
-import { FormError } from "../form-error";
-import { FormSuccess } from "../form-sucess";
-import { register } from "@/actions/register";
 import { Input } from "../ui/input";
+import { CardWrapper } from "./card-wrapper";
 export const RegisterForm = () => {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>("");
@@ -44,9 +44,10 @@ export const RegisterForm = () => {
 
   return (
     <CardWrapper
-      headerLabel="Create an account"
+      headerLabel="Put your shop online"
+      headerDescription="Free for your first 100 products. Takes a minute."
       backButtonHref="/auth/login"
-      backButtonLabel="Already have an account? Sign in"
+      backButtonLabel="Already have an account? Log in"
       showSocials
     >
       <Form {...form}>
@@ -63,7 +64,7 @@ export const RegisterForm = () => {
                       disabled={isPending}
                       {...field}
                       type="string"
-                      placeholder="Om Mishra"
+                      placeholder="Your name"
                       className="w-full"
                     />
                   </FormControl>
@@ -82,7 +83,7 @@ export const RegisterForm = () => {
                       disabled={isPending}
                       {...field}
                       type="email"
-                      placeholder="om.works01@gmail.com"
+                      placeholder="you@example.com"
                       className="w-full"
                     />
                   </FormControl>
@@ -101,7 +102,7 @@ export const RegisterForm = () => {
                       {...field}
                       disabled={isPending}
                       type="password"
-                      placeholder="********"
+                      placeholder="At least 6 characters"
                       className="w-full"
                     />
                   </FormControl>

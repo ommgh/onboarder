@@ -1,9 +1,9 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import {
+  apiAuthPrefix,
+  authRoutes,
   DEFAULT_AUTH_REDIRECT,
   privateRoutes,
-  authRoutes,
-  apiAuthPrefix,
 } from "@/routes";
 
 export function middleware(req: NextRequest) {
@@ -16,11 +16,23 @@ export function middleware(req: NextRequest) {
 
   const isApiAuthRoute = pathname.startsWith(apiAuthPrefix);
   const isPrivateRoute = privateRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
   const isAuthRoute = authRoutes.includes(pathname);
 
   if (isApiAuthRoute) return NextResponse.next();
+
+  // The dashboard sends signed-out-by-deletion users here; drop the stale cookie so the
+  // "already logged in" redirect below can't loop them back.
+  if (isAuthRoute && nextUrl.searchParams.has("expired")) {
+    const res = NextResponse.next();
+    for (const name of [
+      "authjs.session-token",
+      "__Secure-authjs.session-token",
+    ])
+      res.cookies.delete(name);
+    return res;
+  }
 
   if (isAuthRoute && isLoggedIn) {
     return NextResponse.redirect(new URL(DEFAULT_AUTH_REDIRECT, nextUrl));

@@ -1,10 +1,13 @@
 "use client";
-import * as z from "zod";
-import { CardWrapper } from "./card-wrapper";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import type * as z from "zod";
+import { login } from "@/actions/login";
+import { LoginSchema } from "@/schemas";
+import { FormError } from "../form-error";
+import { FormSuccess } from "../form-sucess";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -14,11 +17,8 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { LoginSchema } from "@/schemas";
-import { FormError } from "../form-error";
-import { FormSuccess } from "../form-sucess";
-import { login } from "@/actions/login";
 import { Input } from "../ui/input";
+import { CardWrapper } from "./card-wrapper";
 
 // Create a separate component that uses useSearchParams
 const LoginFormWithSearchParams = () => {
@@ -28,8 +28,10 @@ const LoginFormWithSearchParams = () => {
   const searchParams = useSearchParams();
   const urlError =
     searchParams.get("error") === "OAuthAccountNotLinked"
-      ? "Email already in use with different provider"
-      : "";
+      ? "This email is already registered with a different sign-in method."
+      : searchParams.has("expired")
+        ? "Your session ended. Please log in again."
+        : "";
 
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
@@ -53,9 +55,10 @@ const LoginFormWithSearchParams = () => {
 
   return (
     <CardWrapper
-      headerLabel="Welcome back!"
+      headerLabel="Welcome back"
+      headerDescription="Log in to manage your shop."
       backButtonHref="/auth/register"
-      backButtonLabel="Dont have an account? Sign up"
+      backButtonLabel="New here? Create your shop's account"
       showSocials
     >
       <Form {...form}>
@@ -72,7 +75,7 @@ const LoginFormWithSearchParams = () => {
                       disabled={isPending}
                       {...field}
                       type="email"
-                      placeholder="om.works01@gmail.com"
+                      placeholder="you@example.com"
                       className="w-full"
                     />
                   </FormControl>
@@ -91,7 +94,7 @@ const LoginFormWithSearchParams = () => {
                       {...field}
                       disabled={isPending}
                       type="password"
-                      placeholder="********"
+                      placeholder="Your password"
                       className="w-full"
                     />
                   </FormControl>
@@ -114,9 +117,10 @@ const LoginFormWithSearchParams = () => {
 const LoginFormFallback = () => {
   return (
     <CardWrapper
-      headerLabel="Welcome back!"
+      headerLabel="Welcome back"
+      headerDescription="Log in to manage your shop."
       backButtonHref="/auth/register"
-      backButtonLabel="Dont have an account? Sign up"
+      backButtonLabel="New here? Create your shop's account"
       showSocials
     >
       <div className="space-y-6">

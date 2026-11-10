@@ -1,21 +1,48 @@
-import { Background } from "@/components/background";
-import About from "@/components/blocks/about";
-import { AboutHero } from "@/components/blocks/about-hero";
-import { Investors } from "@/components/blocks/investors";
-import { DashedLine } from "@/components/dashed-line";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = { title: "About" };
 
 export default function AboutPage() {
   return (
-    <Background>
-      <div className="py-28 lg:py-32 lg:pt-44">
-        <AboutHero />
-
-        <About />
-        <div className="pt-28 lg:pt-32">
-          <DashedLine className="container max-w-5xl scale-x-115" />
-          <Investors />
-        </div>
+    <div className="container max-w-3xl py-20">
+      <h1 className="font-serif text-5xl leading-tight tracking-tight text-balance sm:text-6xl">
+        Built for the shop at the end of your street.
+      </h1>
+      <div className="mt-10 space-y-6 text-lg leading-relaxed text-muted-foreground">
+        <p>
+          India has more than a crore neighbourhood shops. They know their
+          customers by name, stock exactly what the locality needs, and deliver
+          faster than any warehouse. Yet most of them are invisible online.
+        </p>
+        <p>
+          The reason isn't a lack of ambition. It's the catalog. A typical
+          kirana carries well over a thousand items, many of them without a
+          barcode, and every marketplace expects each one typed in by hand with
+          photos, sizes and compliance details. That's weeks of work nobody
+          running a shop has.
+        </p>
+        <p>
+          When ONDC launched to open up digital commerce to everyone, it removed
+          the marketplace gatekeeper. Onboarder exists to remove the second
+          barrier, the catalog, by giving each kind of product its own fast path
+          online: scanning for packaged goods, a ready-made list for loose
+          staples, and AI for handmade work.
+        </p>
+        <p className="text-foreground">
+          We'd love to hear from shopkeepers, ONDC buyer apps and anyone working
+          on Bharat's digital commerce.
+        </p>
       </div>
-    </Background>
+      <div className="mt-10 flex gap-3">
+        <Button asChild size="lg">
+          <Link href="/auth/register">Start free</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
+          <Link href="/contact">Get in touch</Link>
+        </Button>
+      </div>
+    </div>
   );
 }
